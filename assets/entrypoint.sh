@@ -24,5 +24,11 @@ if [ "${VEHICLE_NAME_IS_SET}" -eq "0" ]; then
   echo "127.0.0.1 ${VEHICLE_NAME} ${VEHICLE_NAME}.local" >> /etc/hosts
 fi
 
+# make the code discoverable by python
+for d in $(find ${SOURCE_DIR} -maxdepth 1 -type d); do
+  echo "> Adding ${d} to PYTHONPATH"
+  export PYTHONPATH="${d}:${PYTHONPATH}"
+done
+
 # execute given commands (if any)
 exec "$@"
