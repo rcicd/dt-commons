@@ -37,6 +37,15 @@ RUN pip3 install -r ${REPO_PATH}/dependencies-py3.txt
 # copy the source code
 COPY ./code/. "${REPO_PATH}/"
 
+# copy avahi services
+COPY ./assets/avahi-services/. /avahi-services/
+
+# copy environment
+COPY assets/environment.sh /environment.sh
+
+# create default process ID file
+RUN echo 1 > /process.pid
+
 # configure entrypoint
 COPY assets/entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
