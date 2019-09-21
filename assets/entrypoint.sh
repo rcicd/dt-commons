@@ -25,7 +25,7 @@ if [ "${VEHICLE_NAME_IS_SET}" -eq "0" ]; then
 fi
 
 # make the code discoverable by python
-for d in $(find ${SOURCE_DIR} -maxdepth 1 -type d); do
+for d in $(find ${SOURCE_DIR} -mindepth 1 -maxdepth 1 -type d); do
   echo "> Adding ${d} to PYTHONPATH"
   export PYTHONPATH="${d}:${PYTHONPATH}"
 done
