@@ -21,8 +21,6 @@ dt_remove_services() {
 }
 
 dt_terminate() {
-  echo ""
-  echo "TERM signal received! Cleaning up environment!"
   dt_remove_services
   kill -INT `cat /process.pid` 2>/dev/null
 }
@@ -45,4 +43,11 @@ dt_launchfile_init() {
 dt_launchfile_terminate() {
   # wait for the process to end
   wait `cat /process.pid`
+}
+
+dt_exec() {
+  cmd="$@"
+  cmd="${cmd%&} &"
+  eval "${cmd}"
+  echo $! > /process.pid
 }
