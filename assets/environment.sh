@@ -42,7 +42,11 @@ dt_launchfile_init() {
 
 dt_launchfile_terminate() {
   # wait for the process to end
-  wait `cat /process.pid`
+  set +e
+  wait `cat /process.pid`&> /dev/null
+  set -e
+  # remove installed services
+  dt_remove_services
 }
 
 dt_exec() {
