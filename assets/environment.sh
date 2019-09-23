@@ -1,10 +1,13 @@
 #!/bin/bash
 
+_DT_AVAHI_SERVICES_INSTALLED=false
+
 dt_install_services() {
   # adding services
-  if [ -d /avahi-services ]; then
+  if [ -d /avahi-services ] && [ "${_DT_AVAHI_SERVICES_INSTALLED}" = false ]; then
     echo "Activating services broadcast..."
     find /avahi-services -type f -name "dt.*.service" -execdir cp /avahi-services/{} /etc/avahi/services/{} \;
+    _DT_AVAHI_SERVICES_INSTALLED=true
     echo "Done!"
     echo ""
   fi
@@ -12,10 +15,11 @@ dt_install_services() {
 
 dt_remove_services() {
   # removing services
-  if [ -d /avahi-services ]; then
+  if [ -d /avahi-services ] && [ "${_DT_AVAHI_SERVICES_INSTALLED}" = true ]; then
     echo ""
     echo "Deactivating services broadcast..."
     find /avahi-services -type f -name "dt.*.service" -execdir rm -f /etc/avahi/services/{} \;
+    _DT_AVAHI_SERVICES_INSTALLED=false
     echo "Done!"
   fi
 }
