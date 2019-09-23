@@ -36,6 +36,7 @@ dt_register_signals() {
 }
 
 dt_launchfile_init() {
+  set -e
   # install avahi services
   dt_install_services
   # register signal handlers
@@ -47,7 +48,7 @@ dt_launchfile_init() {
 dt_launchfile_terminate() {
   # wait for the process to end
   set +e
-  wait `cat /process.pid`&> /dev/null
+  wait `cat /process.pid` &> /dev/null
   set -e
   # remove installed services
   dt_remove_services

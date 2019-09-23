@@ -11,7 +11,11 @@ FROM ${ARCH}/ubuntu:${OS_DISTRO}
 ENV SOURCE_DIR /code
 ENV DUCKIEFLEET_ROOT "/data/config"
 ENV READTHEDOCS True
+ENV QEMU_EXECVE 1
 WORKDIR "${SOURCE_DIR}"
+
+# copy QEMU
+COPY ./assets/qemu/${ARCH}/ /usr/bin/
 
 # define repository path
 ARG REPO_NAME
