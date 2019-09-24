@@ -1,31 +1,41 @@
 #!/bin/bash
 
-_DT_AVAHI_SERVICES_INSTALLED=false
+_DT_AVAHI_SERVICES_CLEARED=false
 
-dt_install_services() {
+dt_install_service() {
+  service_name=$1
+  # install service
+  if [ -f "/avahi-services/${service_name}.service" ]; then
+    echo ""
+    echo "Activating service [${service_name}]..."
+    cp /avahi-services/${service_name}.service /etc/avahi/services/${service_name}.service
+    echo "Done!"
+  fi
+}
+
+dt_install_all_services() {
   # adding services
-  if [ -d /avahi-services ] && [ "${_DT_AVAHI_SERVICES_INSTALLED}" = false ]; then
+  if [ -d /avahi-services ]; then
     echo "Activating services broadcast..."
     find /avahi-services -type f -name "dt.*.service" -execdir cp /avahi-services/{} /etc/avahi/services/{} \;
-    _DT_AVAHI_SERVICES_INSTALLED=true
     echo "Done!"
     echo ""
   fi
 }
 
-dt_remove_services() {
+dt_remove_all_services() {
   # removing services
-  if [ -d /avahi-services ] && [ "${_DT_AVAHI_SERVICES_INSTALLED}" = true ]; then
+  if [ -d /avahi-services ] && [ "${_DT_AVAHI_SERVICES_CLEARED}" = false ]; then
     echo ""
     echo "Deactivating services broadcast..."
     find /avahi-services -type f -name "dt.*.service" -execdir rm -f /etc/avahi/services/{} \;
-    _DT_AVAHI_SERVICES_INSTALLED=false
+    _DT_AVAHI_SERVICES_CLEARED=true
     echo "Done!"
   fi
 }
 
 dt_terminate() {
-  dt_remove_services
+  dt_remove_all_services
   kill -INT `cat /process.pid` 2>/dev/null
 }
 
@@ -37,8 +47,6 @@ dt_register_signals() {
 
 dt_launchfile_init() {
   set -e
-  # install avahi services
-  dt_install_services
   # register signal handlers
   dt_register_signals
   # create CODE_DIR variable
@@ -51,7 +59,7 @@ dt_launchfile_terminate() {
   wait `cat /process.pid` &> /dev/null
   set -e
   # remove installed services
-  dt_remove_services
+  dt_remove_all_services
 }
 
 dt_exec() {
