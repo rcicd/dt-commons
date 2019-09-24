@@ -8,6 +8,7 @@ ARG OS_DISTRO=xenial
 FROM ${ARCH}/ubuntu:${OS_DISTRO}
 
 # configure environment
+ARG ARCH
 ENV SOURCE_DIR /code
 ENV DUCKIEFLEET_ROOT "/data/config"
 ENV READTHEDOCS True
