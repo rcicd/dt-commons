@@ -5,8 +5,11 @@ class DTProcess(object):
 
     def __init__(self):
         self.is_shutdown = False
+        self.term_signal_received = False
         signal.signal(signal.SIGINT, self._on_SIGINT)
 
     def _on_SIGINT(self, sig, frame):
-        print('Shutdown request received! Gracefully terminating....')
+        if not self.term_signal_received:
+            self.term_signal_received = True
+            print('Shutdown request received! Gracefully terminating....')
         self.is_shutdown = True
