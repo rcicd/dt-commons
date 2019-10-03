@@ -12,4 +12,7 @@ class DTProcess(object):
         if not self.term_signal_received:
             self.term_signal_received = True
             print('Shutdown request received! Gracefully terminating....')
+        self.shutdown()
+
+    def shutdown(self):
         self.is_shutdown = True
