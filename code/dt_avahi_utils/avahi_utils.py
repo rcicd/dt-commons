@@ -7,10 +7,16 @@ def get_available_services_dir():
 def get_install_services_dir():
     return '/etc/avahi/services'
 
+def _make_services_dir():
+    dir = get_install_services_dir()
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+
 def enable_service(service_name, force_replace=False):
     source_service_path = os.path.join(get_available_services_dir(), service_name+".service")
     if not os.path.exists(source_service_path):
         raise ValueError('The service [{}] does not exist.'.format(source_service_path))
+    _make_services_dir()
     dest_service_path = os.path.join(get_install_services_dir(), service_name+".service")
     # install service
     if not os.path.exists(dest_service_path) or force_replace:
