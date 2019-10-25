@@ -1,33 +1,35 @@
 #!/bin/bash
 
 _DT_AVAHI_SERVICES_CLEARED=false
+_DT_AVAHI_SERVICES_DIR=/etc/avahi/services
+_DT_PROJECT_SERVICES_DIR=/avahi-services
 
 dt_install_service() {
   service_name=$1
   # install service
-  if [ -f "/avahi-services/${service_name}.service" ]; then
-    mkdir -p /etc/avahi/services
+  if [ -f "${_DT_PROJECT_SERVICES_DIR}/${service_name}.service" ]; then
+    mkdir -p ${_DT_AVAHI_SERVICES_DIR}
     echo "=> Activating service [${service_name}]..."
-    cp /avahi-services/${service_name}.service /etc/avahi/services/${service_name}.service
+    cp ${_DT_PROJECT_SERVICES_DIR}/${service_name}.service ${_DT_AVAHI_SERVICES_DIR}/${service_name}.service
     echo -e "<= Done!\n"
   fi
 }
 
 dt_install_all_services() {
   # adding services
-  if [ -d /avahi-services ]; then
-    mkdir -p /etc/avahi/services
+  if [ -d "${_DT_PROJECT_SERVICES_DIR}" ]; then
+    mkdir -p ${_DT_AVAHI_SERVICES_DIR}
     echo "=> Activating services broadcast..."
-    find /avahi-services -type f -name "dt.*.service" -execdir cp /avahi-services/{} /etc/avahi/services/{} \;
+    find ${_DT_PROJECT_SERVICES_DIR} -type f -name "dt.*.service" -execdir cp ${_DT_PROJECT_SERVICES_DIR}/{} ${_DT_AVAHI_SERVICES_DIR}/{} \;
     echo -e "<= Done!\n"
   fi
 }
 
 dt_remove_all_services() {
   # removing services
-  if [ -d /etc/avahi/services ] && [ -d /avahi-services ] && [ "${_DT_AVAHI_SERVICES_CLEARED}" = false ]; then
+  if [ -d "${_DT_AVAHI_SERVICES_DIR}" ] && [ -d "${_DT_PROJECT_SERVICES_DIR}" ] && [ "${_DT_AVAHI_SERVICES_CLEARED}" = false ]; then
     if [ "${DEBUG}" = "1" ]; then echo "Deactivating services broadcast..."; fi
-    find /avahi-services -type f -name "dt.*.service" -execdir rm -f /etc/avahi/services/{} \;
+    find ${_DT_PROJECT_SERVICES_DIR} -type f -name "dt.*.service" -execdir rm -f ${_DT_AVAHI_SERVICES_DIR}/{} \;
     _DT_AVAHI_SERVICES_CLEARED=true
   fi
 }
