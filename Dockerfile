@@ -57,4 +57,9 @@ RUN echo 1 > /process.pid
 COPY assets/entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 
+# store module name
+LABEL DT_MODULE_NAME "${REPO_NAME}"
+ENV DT_MODULE_NAME "${REPO_NAME}"
+
+# define maintainer
 LABEL maintainer="Andrea F. Daniele (afdaniele@ttic.edu)"
