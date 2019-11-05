@@ -2,10 +2,13 @@
 ARG REPO_NAME="dt-commons"
 
 ARG ARCH=arm32v7
+ARG MAJOR=daffy
 ARG OS_DISTRO=xenial
+ARG BASE_TAG=${OS_DISTRO}
+ARG BASE_IMAGE=ubuntu
 
 # define base image
-FROM ${ARCH}/ubuntu:${OS_DISTRO}
+FROM ${ARCH}/${BASE_IMAGE}:${BASE_TAG}
 
 # configure environment
 ARG ARCH
@@ -58,8 +61,17 @@ COPY assets/entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 
 # store module name
-LABEL DT_MODULE_NAME "${REPO_NAME}"
-ENV DT_MODULE_NAME "${REPO_NAME}"
+LABEL org.duckietown.label.module.type "${REPO_NAME}"
+ENV DT_MODULE_TYPE "${REPO_NAME}"
+
+# store module metadata
+ARG MAJOR
+ARG BASE_TAG
+ARG BASE_IMAGE
+LABEL org.duckietown.label.architecture "${ARCH}"
+LABEL org.duckietown.label.code.location "${REPO_PATH}"
+LABEL org.duckietown.label.code.version.major "${MAJOR}"
+LABEL org.duckietown.label.base.image "${BASE_IMAGE}:${BASE_TAG}"
 
 # define maintainer
 LABEL maintainer="Andrea F. Daniele (afdaniele@ttic.edu)"
