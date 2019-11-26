@@ -43,5 +43,10 @@ if [ "${DEBUG}" = "1" ]; then echo "=> Setting up PYTHONPATH"; fi
 configure_python
 if [ "${DEBUG}" = "1" ]; then echo -e "<= Done!\n"; fi
 
-# execute given commands (if any)
-exec "$@"
+# reuse LAUNCHFILE as CMD if the var is set and the first argument is `--`
+if [ ${#LAUNCHFILE} -gt 0 ] && [ "$1" == "--" ]; then
+  shift
+  exec bash -c "$LAUNCHFILE $*"
+else
+  exec "$@"
+fi
