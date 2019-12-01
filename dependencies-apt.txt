@@ -1,5 +1,5 @@
 # LIST YOUR APT PACKAGES HERE
 gcc
-python3
-python3-pip
-python3-dev
+wget
+python3.7
+python3.7-dev

@@ -77,3 +77,11 @@ dt_exec() {
   eval "${cmd}"
   echo $! > /process.pid
 }
+
+dt_enable_mdns() {
+  service avahi-daemon start
+}
+
+dt_disable_mdns() {
+  service avahi-daemon start
+}
