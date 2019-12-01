@@ -35,18 +35,17 @@ dt_remove_all_services() {
 }
 
 dt_wait_for_app() {
-  # wait for the process to end
+  # wait for all the processes in the background to terminate
   set +e
-  wait `cat /process.pid` &> /dev/null
+  wait &> /dev/null
   set -e
-  printf "<= App terminated!\n"
 }
 
 dt_terminate() {
   # remove installed services
   dt_remove_all_services
   # send SIGINT signal to monitored process
-  kill -INT `cat /process.pid` 2> /dev/null
+  kill -INT `pgrep -P $$` 2> /dev/null
 }
 
 dt_register_signals() {
@@ -66,6 +65,9 @@ dt_launchfile_init() {
 dt_launchfile_terminate() {
   # wait for the process to end
   dt_wait_for_app
+  # wait for stdout to flush, then announce app termination
+  sleep 1
+  printf "<= App terminated!\n"
   # remove installed services
   dt_remove_all_services
 }
@@ -75,7 +77,6 @@ dt_exec() {
   cmd="${cmd%&} &"
   echo "=> Launching app..."
   eval "${cmd}"
-  echo $! > /process.pid
 }
 
 dt_enable_mdns() {
