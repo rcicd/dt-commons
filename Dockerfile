@@ -2,8 +2,8 @@
 ARG REPO_NAME="dt-commons"
 
 ARG ARCH=arm32v7
-ARG MAJOR=daffy
-ARG OS_DISTRO=xenial
+ARG MAJOR=ente
+ARG OS_DISTRO=bionic
 ARG BASE_TAG=${OS_DISTRO}
 ARG BASE_IMAGE=ubuntu
 
@@ -29,12 +29,6 @@ WORKDIR "${REPO_PATH}"
 # create repo directory
 RUN mkdir -p "${REPO_PATH}"
 
-# add python3.7 sources to APT
-RUN echo "deb http://ppa.launchpad.net/deadsnakes/ppa/ubuntu xenial main" >> /etc/apt/sources.list
-RUN echo "deb-src http://ppa.launchpad.net/deadsnakes/ppa/ubuntu xenial main" >> /etc/apt/sources.list
-RUN gpg --keyserver keyserver.ubuntu.com --recv 6A755776 \
- && gpg --export --armor 6A755776 | apt-key add -
-
 # copy dependencies (APT)
 COPY ./dependencies-apt.txt "${REPO_PATH}/"
 
@@ -43,10 +37,6 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends \
     $(awk -F: '/^[^#]/ { print $1 }' dependencies-apt.txt | uniq) \
   && rm -rf /var/lib/apt/lists/*
-
-# update alternatives for python, python3
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.7 1
-RUN update-alternatives --install /usr/bin/python3 python /usr/bin/python3.7 1
 
 # install pip3
 RUN cd /tmp \
