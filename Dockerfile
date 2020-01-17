@@ -13,10 +13,14 @@ FROM ${ARCH}/${BASE_IMAGE}:${BASE_TAG}
 # configure environment
 ARG ARCH
 ENV SOURCE_DIR /code
+ENV LAUNCH_DIR /launch
 ENV DUCKIEFLEET_ROOT "/data/config"
 ENV READTHEDOCS True
 ENV QEMU_EXECVE 1
 WORKDIR "${SOURCE_DIR}"
+
+# create launch dir
+RUN mkdir -p "${LAUNCH_DIR}"
 
 # copy QEMU
 COPY ./assets/qemu/${ARCH}/ /usr/bin/
@@ -51,7 +55,7 @@ COPY ./dependencies-py3.txt "${REPO_PATH}/"
 RUN pip3 install -r ${REPO_PATH}/dependencies-py3.txt
 
 # copy the source code
-COPY ./code/. "${REPO_PATH}/"
+COPY ./packages/. "${REPO_PATH}/"
 
 # copy avahi services
 COPY ./assets/avahi-services/. /avahi-services/
