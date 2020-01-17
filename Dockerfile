@@ -63,6 +63,10 @@ COPY ./assets/avahi-services/. /avahi-services/
 # copy environment
 COPY assets/environment.sh /environment.sh
 
+# copy utility scripts
+RUN mkdir /utils
+COPY assets/utils/build_check /utils/build_check
+
 # configure entrypoint
 COPY assets/entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
