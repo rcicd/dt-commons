@@ -19,7 +19,7 @@ class DTProcess(object):
         logging.basicConfig()
         self.logger = logging.getLogger(self._app_name)
         self.logger.setLevel(logging.INFO)
-        if 'DEBUG' in os.environ and bool(os.environ['DEBUG']):
+        if 'DEBUG' in os.environ and os.environ['DEBUG'].lower() in ['true', 'yes', '1']:
             self.logger.setLevel(logging.DEBUG)
         self._start_time = time.time()
         self._status = AppStatus.RUNNING
