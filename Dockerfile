@@ -19,11 +19,11 @@ ENV READTHEDOCS True
 ENV QEMU_EXECVE 1
 WORKDIR "${SOURCE_DIR}"
 
-# create launch dir
-RUN mkdir -p "${LAUNCH_DIR}"
-
 # copy QEMU
 COPY ./assets/qemu/${ARCH}/ /usr/bin/
+
+# create launch dir
+RUN mkdir -p "${LAUNCH_DIR}"
 
 # define repository path
 ARG REPO_NAME
@@ -53,6 +53,12 @@ COPY ./dependencies-py3.txt "${REPO_PATH}/"
 
 # install python dependencies
 RUN pip3 install -r ${REPO_PATH}/dependencies-py3.txt
+
+# install RPi libs
+ADD assets/vc.tgz /opt/
+COPY assets/00-vmcs.conf /etc/ld.so.conf.d
+RUN ldconfig
+ENV PATH=/opt/vc/bin:${PATH}
 
 # copy the source code
 COPY ./packages/. "${REPO_PATH}/"
