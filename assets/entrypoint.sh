@@ -43,10 +43,10 @@ if [ "${DEBUG}" = "1" ]; then echo "=> Setting up PYTHONPATH"; fi
 configure_python
 if [ "${DEBUG}" = "1" ]; then echo -e "<= Done!\n"; fi
 
-# reuse LAUNCHFILE as CMD if the var is set and the first argument is `--`
-if [ ${#LAUNCHFILE} -gt 0 ] && [ "$1" == "--" ]; then
+# reuse LAUNCHER as CMD if the var is set and the first argument is `--`
+if [ ${#LAUNCHER} -gt 0 ] && [ "$1" == "--" ]; then
   shift
-  exec bash -c "$LAUNCHFILE $*"
+  exec bash -c "dt-launcher-$LAUNCHER $*"
 else
   exec "$@"
 fi

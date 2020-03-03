@@ -1,5 +1,6 @@
 # parameters
 ARG REPO_NAME="dt-commons"
+ARG MAINTAINER="Andrea F. Daniele (afdaniele@ttic.edu)"
 
 ARG ARCH=arm32v7
 ARG MAJOR=ente
@@ -71,24 +72,33 @@ COPY assets/environment.sh /environment.sh
 
 # copy utility scripts
 RUN mkdir /utils
-COPY assets/utils/build_check /utils/build_check
+COPY assets/utils/* /utils/
+
+# define healthcheck
+RUN echo none > /status
+HEALTHCHECK \
+    --interval=5s \
+    CMD grep -q healthy /status
 
 # configure entrypoint
 COPY assets/entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 
+# define default command
+ENV LAUNCHER "default"
+CMD ["bash", "-c", "dt-launcher-${LAUNCHER}"]
+
 # store module name
-LABEL org.duckietown.label.module.type "${REPO_NAME}"
+LABEL org.duckietown.label.module.type="${REPO_NAME}"
 ENV DT_MODULE_TYPE "${REPO_NAME}"
 
 # store module metadata
 ARG MAJOR
 ARG BASE_TAG
 ARG BASE_IMAGE
-LABEL org.duckietown.label.architecture "${ARCH}"
-LABEL org.duckietown.label.code.location "${REPO_PATH}"
-LABEL org.duckietown.label.code.version.major "${MAJOR}"
-LABEL org.duckietown.label.base.image "${BASE_IMAGE}:${BASE_TAG}"
-
-# define maintainer
-LABEL maintainer="Andrea F. Daniele (afdaniele@ttic.edu)"
+ARG MAINTAINER
+LABEL org.duckietown.label.architecture="${ARCH}"
+LABEL org.duckietown.label.code.location="${REPO_PATH}"
+LABEL org.duckietown.label.code.version.major="${MAJOR}"
+LABEL org.duckietown.label.base.image="${BASE_IMAGE}:${BASE_TAG}"
+LABEL org.duckietown.label.maintainer="${MAINTAINER}"

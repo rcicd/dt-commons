@@ -66,7 +66,7 @@ dt_launchfile_terminate() {
   # wait for the process to end
   dt_wait_for_app
   # wait for stdout to flush, then announce app termination
-  sleep 1
+  sleep 0.5
   printf "<= App terminated!\n"
   # remove installed services
   dt_remove_all_services
