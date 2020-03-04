@@ -23,16 +23,15 @@ WORKDIR "${SOURCE_DIR}"
 # copy QEMU
 COPY ./assets/qemu/${ARCH}/ /usr/bin/
 
-# create launch dir
-RUN mkdir -p "${LAUNCH_DIR}"
-
 # define repository path
 ARG REPO_NAME
 ARG REPO_PATH="${SOURCE_DIR}/${REPO_NAME}"
+ARG LAUNCH_PATH="${LAUNCH_DIR}/${REPO_NAME}"
 WORKDIR "${REPO_PATH}"
 
 # create repo directory
 RUN mkdir -p "${REPO_PATH}"
+RUN mkdir -p "${LAUNCH_PATH}"
 
 # copy dependencies (APT)
 COPY ./dependencies-apt.txt "${REPO_PATH}/"
@@ -83,6 +82,10 @@ HEALTHCHECK \
 # configure entrypoint
 COPY assets/entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
+
+# install launcher scripts
+COPY ./launch/default.sh "${LAUNCH_PATH}/"
+RUN /utils/install_launchers "${LAUNCH_PATH}"
 
 # define default command
 ENV LAUNCHER "default"
