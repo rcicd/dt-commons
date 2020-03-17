@@ -24,6 +24,8 @@ for filepath in "${LAUNCH_DIR}"/*; do
   base=$(basename "${filepath}")
   filename=${base%.*}
   destination="${INSTALL_DIR}/dt-launcher-${filename}"
+  # remove overlapping link (if any)
+  rm -f "${destination}"
   # create a link to the launcher
   ln -s "${filepath}" "${destination}"
   if [[ ! -x "${filepath}" ]]; then
