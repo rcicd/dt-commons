@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+export DT_MODULE_INSTANCE=$(basename $(cat /proc/1/cpuset))
+
 configure_vehicle(){
   # check the mandatory arguments
   VEHICLE_NAME_IS_SET=1
