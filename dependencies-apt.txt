@@ -3,3 +3,6 @@ gcc
 wget
 python3
 python3-dev
+
+# this is for MDNS name resolution (still needs the avahi socket to be mounted)
+libnss-mdns
