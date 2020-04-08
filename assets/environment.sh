@@ -45,13 +45,12 @@ dt_terminate() {
   # remove installed services
   dt_remove_all_services
   # send SIGINT signal to monitored process
-  kill -INT `pgrep -P $$` 2> /dev/null
+  kill -INT $(pgrep -P $$) 2> /dev/null
 }
 
 dt_register_signals() {
   trap dt_terminate SIGINT
   trap dt_terminate SIGTERM
-  trap dt_terminate SIGKILL
 }
 
 dt_launchfile_init() {
@@ -59,7 +58,9 @@ dt_launchfile_init() {
   # register signal handlers
   dt_register_signals
   # create CODE_DIR variable
+  # TODO: in ente, LAUNCHFILE is not declared anymore, so this will not work
   CODE_DIR="$( cd "$( dirname "${LAUNCHFILE}" )" > /dev/null 2>&1 && pwd )"
+  export CODE_DIR
 }
 
 dt_launchfile_terminate() {
