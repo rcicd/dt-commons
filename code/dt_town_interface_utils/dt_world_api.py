@@ -8,6 +8,7 @@ import glob
 
 class WorldAPIClient:
     def __init__(self, robot):
+        super(WorldAPIClient, self).__init__(robot=node_name)
         self.robot = robot #upon calling this class from lib, specify input robot
         self.robot_type = "unknown"
         self.active_config = None

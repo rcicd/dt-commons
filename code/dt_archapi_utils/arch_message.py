@@ -1,6 +1,9 @@
 import datetime
 
-class ArchMessage:
+#Library for various message types used by the ArchitectureAPI (dt-architecture-
+#api) and TownAPI (dt-town-interface).
+
+class ApiMessage:
     def __init__(self, status="ok", message=None, data=None):
         self.msg = {}
         self.msg["status"] = status
@@ -13,6 +16,7 @@ class ArchMessage:
     def __str__(self):
         return self.msg
 
+'''
 class JobLog:
     def __init__(self, id):
         self.log = {}
@@ -48,3 +52,4 @@ class JobLog:
 
     def __str__(self):
         return self.log
+'''

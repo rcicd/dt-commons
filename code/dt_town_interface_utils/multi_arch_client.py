@@ -11,19 +11,40 @@ import glob
 from ..dt_archapi_utils/arch_client import ArchAPIClient
 
 class multiArchAPIClient:
-    def __init__(self, robot):
-        super(StateEstimator, self).__init__(robot=node_name)
-        
-        self.robot = robot #upon calling this class from lib, specify input robot
+    def __init__(self, fleet=None, client=None):
+        #fleet = list/array of devices that are to be controlled
+        #client = docker.DockerClient for communication via server
+
+        #Initialize fleet & docker.DockerClient()
+        self.client = client
+        if fleet is None:
+            self.fleet = "//read from default .yaml file//"
+        else:
+            self.fleet = fleet #custom fleet as list/array
+
+        #Give every DB an ArchAPIClient
+        self.api = ArchAPIClient()
+        for i in [0, (len(self.fleet) -1)]:
+            self.multi_api = []
+            self.multi_api(i) = self.api(self.fleet(i), self.client)
+
+        #Initialize folders and directories
         self.robot_type = "unknown"
         self.active_config = None
-        self.config_path = None
-        self.module_path = "/data/assets/dt-architecture-data/modules/"
         self.current_configuration = "none"
         self.dt_version = "ente"
-        self.worker = ConfigWorker()
-        self.status = ConfigMessage()
 
+
+#SWARM FUNCTION: move to dt-town-interface
+    def docker_swarm(self):
+        self.client.swarm()
+
+
+#ENDPOINTS FOR TOWNAPI:
+    #HTTP REQUEST: townXX.local:8083/architecture/<something>/<else>
+    #PASS REQUEST: split into all necessary arch configs
+
+#AUXILIARY FUNCTIONS:
     def get_robot_list(self):
         #list ALL robots from .yaml filename by default
         #if no http request can be sent, show error message, or don't care
