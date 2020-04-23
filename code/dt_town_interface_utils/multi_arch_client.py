@@ -9,40 +9,80 @@ import glob
 
 #Import from another folder within dt-commons (no base image)
 from ..dt_archapi_utils/arch_client import ArchAPIClient
+from ..dt_archapi_utils/arch_message import ApiMessage
+
+from .device_list import deviceList
 
 class multiArchAPIClient:
-    def __init__(self, fleet=None, client=None):
-        #fleet = list/array of devices that are to be controlled
-        #client = docker.DockerClient for communication via server
-
-        #Initialize fleet & docker.DockerClient()
+    def __init__(self, fleet=None, client=None): #fleet as yaml file without .yaml
         self.client = client
-        if fleet is None:
-            self.fleet = "//read from default .yaml file//"
-        else:
-            self.fleet = fleet #custom fleet as list/array
+        self.status = ApiMessage()
+        self.error = ApiMessage()
 
-        #Give every DB an ArchAPIClient
-        self.api = ArchAPIClient()
-        for i in [0, (len(self.fleet) -1)]:
-            self.multi_api = []
-            self.multi_api(i) = self.api(self.fleet(i), self.client)
+        #Set up fleet list
+        self.list = deviceList(fleet)
+        if self.list.as_array is []:
+            self.status("error", "Fleet file was not found", self.list.path_to_list)
+        else:
+            self.list = self.list.as_array
+
+        #Define robot_type
+        self.robot_type = "none"
+        if os.path.isfile("/data/config/robot_type"):
+            self.robot_type = open("/data/config/robot_type").readline()
+        elif os.path.isfile("/data/stats/init_sd_card/parameters/robot_type"):
+            self.robot_type = open("/data/stats/init_sd_card/parameters/robot_type").readline()
+        else: #error upon initialization = status
+            self.status("error", "Could not find robot type in expected paths", None)
 
         #Initialize folders and directories
-        self.robot_type = "unknown"
-        self.active_config = None
         self.current_configuration = "none"
         self.dt_version = "ente"
 
 
-#SWARM FUNCTION: move to dt-town-interface
-    def docker_swarm(self):
-        self.client.swarm()
+'''
+        #Give town an ArchAPIClient
+        self.api = ArchAPIClient()
+        self.town_name = os.environ['VEHICLE_NAME']
+        self.town = self.api(self.town_name, None)
+
+        #Give every device in fleet an ArchAPIClient
+        for i in [0, len(self.fleet)-1]:
+            self.multi_api = []
+            self.multi_api(i) = self.api(self.fleet(i), self.client)
+'''
+
 
 
 #ENDPOINTS FOR TOWNAPI:
     #HTTP REQUEST: townXX.local:8083/architecture/<something>/<else>
     #PASS REQUEST: split into all necessary arch configs
+    #This library does not take care about individual messages between town and
+    #user. As this is the task of the Architecture API running on the town.
+
+    #Make list of desired HTTP cmds to send out
+    def request_list(self): #also possible to specify fleet here?
+        return self.listmaker
+
+    def read_data(self):
+        self.api.config_path
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #AUXILIARY FUNCTIONS:
     def get_robot_list(self):
@@ -76,3 +116,12 @@ class multiArchAPIClient:
         self.status = robot.configuration.status()
         self.list = robot.configuration.list()
         self.info = "default message, hardcoded, get from somewhere (dt-arch-data??)"
+
+
+
+        '''
+        if fleet is None:
+            self.fleet = self.list.list #"//read from default .yaml file//" #array type!
+        else:
+            self.fleet = fleet #custom fleet as list/array
+        '''

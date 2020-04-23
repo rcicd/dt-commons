@@ -17,12 +17,12 @@ from git import Repo
 from .arch_message import ApiMessage
 
 class ArchAPIClient:
-    def __init__(self, hostname="hostname", client=None):
+    def __init__(self, hostname="hostname", robot_type=None, client=None):
         #Initialize robot hostname & docker.DockerClient()
         self.hostname = hostname
         self.client = client
+
         #Initialize folders and directories
-        self.robot_type = "unknown"
         self.active_config = None
         self.config_path = None
         self.module_path = None
@@ -31,15 +31,17 @@ class ArchAPIClient:
         self.dt_version = "ente"
         self.status = ApiMessage()
         self.error = ApiMessage()
-        #self.worker = ConfigWorker()
 
         #Retract robot_type
-        if os.path.isfile("/data/config/robot_type"):
-            self.robot_type = open("/data/config/robot_type").readline()
-        elif os.path.isfile("/data/stats/init_sd_card/parameters/robot_type"):
-            self.robot_type = open("/data/stats/init_sd_card/parameters/robot_type").readline()
-        else: #error upon initialization = status
-            self.status("error", "Could not find robot type in expected paths", None)
+        if robot_type is None:
+            if os.path.isfile("/data/config/robot_type"):
+                self.robot_type = open("/data/config/robot_type").readline()
+            elif os.path.isfile("/data/stats/init_sd_card/parameters/robot_type"):
+                self.robot_type = open("/data/stats/init_sd_card/parameters/robot_type").readline()
+            else: #error upon initialization = status
+                self.status("error", "Could not find robot type from expected paths", None)
+        else:
+            self.robot_type = robot_type
 
         #Include ente version of dt-architecture-data repo
         if not os.path.isdir("/data/assets/dt-architecture-data"):
@@ -52,6 +54,14 @@ class ArchAPIClient:
         #Initialize configuration & module endpoints
         self.configuration = []  #empty array, with all endpoints in it
         self.module = []  #empty list, with all endpoints in it
+
+
+#RE-USE INITIALIZED PATHS: in multi_arch_client
+    def config_path(self):
+        return self.config_path
+
+    def module_path(self):
+        return self.module_path
 
 
 #PASSIVE MESSAGING: monitoring (info, list, status) requests
@@ -86,9 +96,9 @@ class ArchAPIClient:
                             if "configuration" in mod_config:
                                 data["modules"][m]["configuration"] = mod_config["configuration"]
                 self.configuration.info = data
+                return self.configuration.info
         except FileNotFoundError: #error msg
             return self.error("error", "Configuration file not found", self.config_path + "/" + config + ".yaml")
-        return self.configuration.info
 
 
     def module_list(self):
