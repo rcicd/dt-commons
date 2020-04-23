@@ -1,11 +1,5 @@
 #!/usr/bin/env python3
-#This is the DT Architecture Library for dt-commons
-
-#THIS LIB INCLUDES FUNCTIONS THAT ALLOW TO COMMUNICATE WITH AN ARCHITECTURE API
-#RUNNING ON A SINGLE ROBOT, BUT DO NOT SPECIFY THE REQUIRED API FOR THAT. I.E.
-#THE REQUIRED SERVER IS NOT RUNNING WITHIN THE LIBRARY.
-
-#Define msg types for various endpoints of a single architecture api
+#This script is part of the DT Architecture Library for dt-commons
 
 import yaml
 import docker
@@ -15,6 +9,14 @@ import glob
 
 from git import Repo
 from .arch_message import ApiMessage
+from .arch_worker import ApiWorker
+
+'''
+    THIS LIB INCLUDES FUNCTIONS THAT ALLOW TO COMMUNICATE WITH AN ARCHITECTURE
+    API RUNNING ON A SINGLE ROBOT (MSG TYPES FOR VARIOUS ENDPOINTS OF A SINGLE
+    ARCHITECTURE API), BUT DO NOT SPECIFY THE REQUIRED API FOR THAT. I.E. THE
+    REQUIRED SERVER IS NOT RUNNING WITHIN THE LIBRARY
+'''
 
 class ArchAPIClient:
     def __init__(self, hostname="hostname", robot_type=None, client=None):
@@ -31,6 +33,7 @@ class ArchAPIClient:
         self.dt_version = "ente"
         self.status = ApiMessage()
         self.error = ApiMessage()
+        self.work = ApiWorker(self.client)
 
         #Retract robot_type
         if robot_type is None:
@@ -94,6 +97,7 @@ class ArchAPIClient:
                             mod_type = mods[m]["type"]
                             mod_config = self.module_info(mod_type)
                             if "configuration" in mod_config:
+                                #Virtually append module configuration info to configuration file
                                 data["modules"][m]["configuration"] = mod_config["configuration"]
                 self.configuration.info = data
                 return self.configuration.info
@@ -157,20 +161,25 @@ class ArchAPIClient:
         return self.module.info
 
 
-#ACTIVE MESSAGING: activation (pull, stop, ...) requests
-#IGNORE: these require an active docker_client and self.worker functions
-'''
-    def configuration_set_config(self, config_name):
-        data = self.configuration_info(config_name)
-        return str(self.worker.apply_configuration(data))
+#ACTIVE MESSAGING: activation (pull, stop, ...) requests requiring a DockerClient()
+    def configuration_set_config(self, config):
+        #Get virtually extended config file with module specs
+        mod_config = self.configuration_info(config)
+        return self.work.set_config(mod_config)
+
 
     def pull_image(self, url):
-        return self.worker.pull_image(url)
+        #url of form {image_url}:{image_tag}
+        return self.work.pull_image(url)
+
 
     def monitor_id(self, id):
-        #get current job status, using an ETag
-        if int(id) in self.worker.log:
-            return self.worker.log[int(id)]
+        #Get current job status, using id=ETag
+        if int(id) in self.work.log:
+            return self.work.log[int(id)]
         else:
-            return self.worker.log.copy()
-'''
+            return self.work.log.copy()
+
+
+    def clear_job_log(self):
+        return self.work.clear_log()

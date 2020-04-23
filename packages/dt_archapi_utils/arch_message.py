@@ -16,7 +16,7 @@ class ApiMessage:
     def __str__(self):
         return self.msg
 
-'''
+
 class JobLog:
     def __init__(self, id):
         self.log = {}
@@ -52,4 +52,3 @@ class JobLog:
 
     def __str__(self):
         return self.log
-'''
