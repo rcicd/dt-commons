@@ -8,7 +8,7 @@ import git
 import glob
 
 
-class deviceList:
+class DeviceList:
     def __init__(self, fleet=None):
         #Define incoming fleet
         self.fleet = fleet
@@ -61,5 +61,5 @@ class deviceList:
                 return self.list
 
         except FileNotFoundError:
-            #Return empty list
+            #Return empty list - error msg
             return self.list

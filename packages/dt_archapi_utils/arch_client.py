@@ -71,9 +71,9 @@ class ArchAPIClient:
     def default_response(self):
         return self.status #.msg if message only
 
-    def configuration_status(self):
-        self.configuration.status = json.dumps(self.status)
-        return self.configuration.status
+    #def configuration_status(self):
+    #    self.configuration.status = json.dumps(self.status)
+    #    return self.configuration.status
 
     def configuration_list(self):
         self.configuration.list = {} #re-initialize every time called for (empty when error)
