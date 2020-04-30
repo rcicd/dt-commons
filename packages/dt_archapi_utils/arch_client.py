@@ -58,6 +58,9 @@ class ArchAPIClient:
         self.configuration = []  #empty array, with all endpoints in it
         self.module = []  #empty list, with all endpoints in it
 
+        self.configuration_info = {}
+        self.module_info = {}
+
 
 #RE-USE INITIALIZED PATHS: in multi_arch_client
     def config_path(self):
@@ -86,10 +89,9 @@ class ArchAPIClient:
 
 
     def configuration_info(self, config):
-        self.configuration_info = {} #re-initialize every time called for (empty when error)
         try:
             with open(self.config_path + "/" + config + ".yaml", 'r') as file:
-                data = yaml.load(file)
+                data = yaml.load(file, Loader=FullLoader)
                 if "modules" in data:
                     mods = data["modules"]
                     for m in mods:
@@ -112,7 +114,7 @@ class ArchAPIClient:
             try:
                 with open(file, 'r') as fd:
                     print ("loading module: " + file)
-                    config = yaml.load(fd)
+                    config = yaml.load(fd, Loader=FullLoader)
                     filename, ext = os.path.splitext(os.path.basename(file))
                     self.module_list["modules"] = [] #put here, so error msg can be sent
                     self.module_list["modules"].append(filename)
@@ -122,10 +124,9 @@ class ArchAPIClient:
 
 
     def module_info(self, module):
-        self.module_info = {} #re-initialize every time called for (empty when error)
         try:
             with open(self.module_path + "/" + module + ".yaml", 'r') as fd:
-                self.module_info = yaml.load(fd)
+                self.module_info = yaml.load(fd, Loader=FullLoader)
                 config = self.module_info["configuration"]
 
                 #Update ports for pydocker from docker-compose
