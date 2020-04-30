@@ -7,7 +7,7 @@ import git
 import glob
 import requests
 import json
-
+"""
 #Import from another folder within dt-commons (no base image)
 from ..dt_archapi_utils import ArchAPIClient
 from ..dt_archapi_utils import ApiMessage
@@ -108,7 +108,7 @@ class MultiArchAPIClient:
 
 
 
-"""
+'''
     def pull_image(self, url):
         return self.town_api.pull_image(url)
 
@@ -117,7 +117,7 @@ class MultiArchAPIClient:
 
     def clear_job_log(self):
         return self.town_api.clear_job_log
-"""
+'''
 
 
 '''
@@ -200,3 +200,4 @@ class MultiArchAPIClient:
         else:
             self.fleet = fleet #custom fleet as list/array
         '''
+"""
