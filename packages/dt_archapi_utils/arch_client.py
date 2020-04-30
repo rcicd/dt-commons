@@ -42,7 +42,7 @@ class ArchAPIClient:
             elif os.path.isfile("/data/stats/init_sd_card/parameters/robot_type"):
                 self.robot_type = open("/data/stats/init_sd_card/parameters/robot_type").readline()
             else: #error upon initialization = status
-                self.status("error", "Could not find robot type from expected paths", None)
+                self.status("error", "Could not find robot type from expected paths", None).msg
         else:
             self.robot_type = robot_type
 
@@ -69,24 +69,24 @@ class ArchAPIClient:
 
 #PASSIVE MESSAGING: monitoring (info, list, status) requests
     def default_response(self):
-        return self.status #.msg if message only
+        return self.status.msg
 
     #def configuration_status(self):
-    #    self.configuration.status = json.dumps(self.status)
-    #    return self.configuration.status
+    #    self.configuration_status = json.dumps(self.status)
+    #    return self.configuration_status
 
     def configuration_list(self):
-        self.configuration.list = {} #re-initialize every time called for (empty when error)
+        self.configuration_list = {} #re-initialize every time called for (empty when error)
         if self.config_path is not None:
             config_paths = glob.glob(self.config_path + "/*.yaml")
-            self.configuration.list["configurations"] = [os.path.splitext(os.path.basename(f))[0] for f in config_paths]
+            self.configuration_list["configurations"] = [os.path.splitext(os.path.basename(f))[0] for f in config_paths]
         else: #error msg
-            return self.error("error", "could not find configurations (dt-docker-data)", None)
-        return self.configuration.list
+            return self.error("error", "could not find configurations (dt-docker-data)", None).msg
+        return self.configuration_list
 
 
     def configuration_info(self, config):
-        self.configuration.info = {} #re-initialize every time called for (empty when error)
+        self.configuration_info = {} #re-initialize every time called for (empty when error)
         try:
             with open(self.config_path + "/" + config + ".yaml", 'r') as file:
                 data = yaml.load(file)
@@ -99,14 +99,14 @@ class ArchAPIClient:
                             if "configuration" in mod_config:
                                 #Virtually append module configuration info to configuration file
                                 data["modules"][m]["configuration"] = mod_config["configuration"]
-                self.configuration.info = data
-                return self.configuration.info
+                self.configuration_info = data
+                return self.configuration_info
         except FileNotFoundError: #error msg
-            return self.error("error", "Configuration file not found", self.config_path + "/" + config + ".yaml")
+            return self.error("error", "Configuration file not found", self.config_path + "/" + config + ".yaml").msg
 
 
     def module_list(self):
-        self.module.list = {} #re-initialize every time called for (empty when error)
+        self.module_list = {} #re-initialize every time called for (empty when error)
         yaml_paths = glob.glob(self.module_path + "/*.yaml")
         for file in yaml_paths:
             try:
@@ -114,19 +114,19 @@ class ArchAPIClient:
                     print ("loading module: " + file)
                     config = yaml.load(fd)
                     filename, ext = os.path.splitext(os.path.basename(file))
-                    self.module.list["modules"] = [] #put here, so error msg can be sent
-                    self.module.list["modules"].append(filename)
+                    self.module_list["modules"] = [] #put here, so error msg can be sent
+                    self.module_list["modules"].append(filename)
             except FileNotFoundError: #error msg
-                return self.error("error", "Module file not found", self.module_path + "/" + file + ".yaml")
-        return self.module.list
+                return self.error("error", "Module file not found", self.module_path + "/" + file + ".yaml").msg
+        return self.module_list
 
 
     def module_info(self, module):
-        self.module.info = {} #re-initialize every time called for (empty when error)
+        self.module_info = {} #re-initialize every time called for (empty when error)
         try:
             with open(self.module_path + "/" + module + ".yaml", 'r') as fd:
-                self.module.info = yaml.load(fd)
-                config = self.module.info["configuration"]
+                self.module_info = yaml.load(fd)
+                config = self.module_info["configuration"]
 
                 #Update ports for pydocker from docker-compose
                 if "ports" in config:
@@ -155,10 +155,10 @@ class ArchAPIClient:
                 if "image" in config:
                     config["image"] = config["image"].replace('${ARCH-arm32v7}','arm32v7' )
 
-        except FileNotFoundError: #error msg
-            return self.error("error", "Module not found", self.module_path + module + ".yaml")
+                return self.module_info
 
-        return self.module.info
+        except FileNotFoundError: #error msg
+            return self.error("error", "Module not found", self.module_path + module + ".yaml").msg
 
 
 #ACTIVE MESSAGING: activation (pull, stop, ...) requests requiring a DockerClient()
