@@ -9,8 +9,8 @@ import requests
 import json
 
 #Import from another folder within dt-commons (no base image)
-from ..dt_archapi_utils/arch_client import ArchAPIClient
-from ..dt_archapi_utils/arch_message import ApiMessage
+from ..dt_archapi_utils import ArchAPIClient
+from ..dt_archapi_utils import ApiMessage
 
 from .device_list import DeviceList
 from .multi_request import MultiRequests
