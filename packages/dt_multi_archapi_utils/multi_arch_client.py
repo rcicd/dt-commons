@@ -32,7 +32,7 @@ class MultiArchAPIClient:
         self.status = ApiMessage()
 
         #Set up fleet list = list of hostnames in fleet excl. town
-        self.fleet = deviceList(fleet)
+        self.fleet = DeviceList(fleet)
         if self.fleet.as_array is []:
             self.status.error(status="error", msg="Fleet file was not found", data=self.fleet.path_to_list)
         else:
