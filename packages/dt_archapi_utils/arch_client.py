@@ -58,8 +58,8 @@ class ArchAPIClient:
         self.configuration = []  #empty array, with all endpoints in it
         self.module = []  #empty list, with all endpoints in it
 
-        self.configuration_info = {}
-        self.module_info = {}
+        #self.configuration_info = {}
+        #self.module_info = {}
 
 
 #RE-USE INITIALIZED PATHS: in multi_arch_client
@@ -91,18 +91,19 @@ class ArchAPIClient:
     def configuration_info(self, config):
         try:
             with open(self.config_path + "/" + config + ".yaml", 'r') as file:
-                data = yaml.load(file, Loader=FullLoader)
-                if "modules" in data:
-                    mods = data["modules"]
+                self.configuration_info = yaml.load(file, Loader=FullLoader)
+                if "modules" in self.configuration_info:
+                    mods = self.configuration_info["modules"]
                     for m in mods:
                         if "type" in mods[m]:
                             mod_type = mods[m]["type"]
                             mod_config = self.module_info(mod_type)
                             if "configuration" in mod_config:
                                 #Virtually append module configuration info to configuration file
-                                data["modules"][m]["configuration"] = mod_config["configuration"]
-                self.configuration_info = data
+                                self.configuration_info["modules"][m]["configuration"] = mod_config["configuration"]
+
                 return self.configuration_info
+
         except FileNotFoundError: #error msg
             return self.error("error", "Configuration file not found", self.config_path + "/" + config + ".yaml").msg
 
