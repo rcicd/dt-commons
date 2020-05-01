@@ -7,7 +7,7 @@ import time
 import requests as r
 
 from multiprocessing import Process, Manager
-from packages.dt_archapi_utils.arch_message import ApiMessage, JobLog
+from ..dt_archapi_utils.arch_message import ApiMessage, JobLog
 
 
 '''
