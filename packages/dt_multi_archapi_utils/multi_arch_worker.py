@@ -39,7 +39,7 @@ class MultiApiWorker:
             if r.status_code != 200:
                 #for tests only
                 message_list[str(device)] = "error response: working for" + str(device)
-                #return self.status.error(status="error", msg="bad request for" + str(device), data=r.status.code)
+                #return self.status.error(status="error", msg="bad request for" + str(device) + str(r.status.code))
 
             try:
                 #Save entire response message in dict

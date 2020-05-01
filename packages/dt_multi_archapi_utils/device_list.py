@@ -52,7 +52,7 @@ class DeviceList:
                 greenstations = []
                 if "greenstation" in devices:
                     greenstations = devices["greenstation"]
-                duckiedrones []
+                duckiedrones = []
                 if "duckiedrone" in devices:
                     duckiedrones = devices["duckiedrone"]
 
