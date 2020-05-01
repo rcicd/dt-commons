@@ -14,8 +14,8 @@ from .device_list import DeviceList
 from .multi_arch_worker import MultiApiWorker
 
 #Import from another folder within dt-commons (no base image)
-from packages.dt_archapi_utils.arch_client import ArchAPIClient
-from packages.dt_archapi_utils.arch_message import ApiMessage
+from dt_archapi_utils.arch_client import ArchAPIClient
+from dt_archapi_utils.arch_message import ApiMessage
 
 '''
     THIS LIB INCLUDES FUNCTIONS THAT ALLOW TO COMMUNICATE WITH AN EXTENDED
