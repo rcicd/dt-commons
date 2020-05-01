@@ -70,6 +70,8 @@ class MultiArchAPIClient:
 
         return def_response_list
 
+
+
 """
     def configuration_info(self, config):
         #Include config info on fleet (per device)
@@ -143,7 +145,7 @@ class MultiArchAPIClient:
 '''
 
 
-
+"""
 #ENDPOINTS FOR TOWNAPI:
     #HTTP REQUEST: townXX.local:8083/architecture/<something>/<else>
     #PASS REQUEST: split into all necessary arch configs
@@ -215,3 +217,4 @@ class MultiArchAPIClient:
         else:
             self.fleet = fleet #custom fleet as list/array
         '''
+"""
