@@ -54,10 +54,6 @@ class ArchAPIClient:
         self.config_path = "/data/assets/dt-architecture-data/configurations/"+self.robot_type
         self.module_path = "/data/assets/dt-architecture-data/modules/"
 
-        #Initialize configuration & module endpoints
-        self.configuration = []  #empty array, with all endpoints in it
-        self.module = []  #empty list, with all endpoints in it
-
 
 #RE-USE INITIALIZED PATHS: in multi_arch_client
     def config_path(self):
@@ -81,10 +77,11 @@ class ArchAPIClient:
             config_paths = glob.glob(self.config_path + "/*.yaml")
             config_list["configurations"] = [os.path.splitext(os.path.basename(f))[0] for f in config_paths]
         else: #error msg
-            self.status["status"] = "error"
-            self.status["message"].append("could not find configurations (dt-docker-data)")
-            return self.status
-            #return self.status("error", "could not find configurations (dt-docker-data)", None).msg
+            #self.status["status"] = "error"
+            #self.status["message"].append("could not find configurations (dt-docker-data)")
+            #return self.status
+            self.status = self.status(status="error", message="could not find configurations (dt-docker-data)")
+            return self.status.msg
         return config_list
 
 
@@ -105,12 +102,13 @@ class ArchAPIClient:
                 return config_info
 
         except FileNotFoundError: #error msg
-            error_msg = {}
-            error_msg["status"] = "error"
-            error_msg["message"] = "Configuration file not found "
-            error_msg["data"] = self.config_path + "/" + config + ".yaml"
-            return error_msg
-            #return self.error("error", "Configuration file not found", self.config_path + "/" + config + ".yaml").msg
+            #error_msg = {}
+            #error_msg["status"] = "error"
+            #error_msg["message"] = "Configuration file not found "
+            #error_msg["data"] = self.config_path + "/" + config + ".yaml"
+            #return error_msg
+            self.error = self.error(status="error", message="Configuration file not found", data=self.config_path + "/" + config + ".yaml")
+            return self.error.msg
 
 
     def module_list(self):
@@ -126,12 +124,13 @@ class ArchAPIClient:
                     #mod_list["modules"] = [] #put here, so error msg can be sent
                     mod_list["modules"].append(filename)
             except FileNotFoundError: #error msg
-                error_msg = {}
-                error_msg["status"] = "error"
-                error_msg["message"] = "Module file not found"
-                error_msg["data"] = self.module_path + file + ".yaml" #+ "/"
-                return error_msg
-                #return self.error("error", "Module file not found", self.module_path + "/" + file + ".yaml").msg
+                #error_msg = {}
+                #error_msg["status"] = "error"
+                #error_msg["message"] = "Module file not found"
+                #error_msg["data"] = self.module_path + file + ".yaml" #+ "/"
+                #return error_msg
+                self.error = self.error(status="error", message="Module file not found", data=self.module_path + "/" + file + ".yaml")
+                return self.error.msg
         return mod_list
 
 
@@ -171,12 +170,13 @@ class ArchAPIClient:
                 return mod_info
 
         except FileNotFoundError: #error msg
-            error_msg = {}
-            error_msg["status"] = "error"
-            error_msg["message"] = "Module file not found"
-            error_msg["data"] = self.module_path + module + ".yaml"
-            return error_msg
-            #return self.error("error", "Module not found", self.module_path + module + ".yaml").msg
+            #error_msg = {}
+            #error_msg["status"] = "error"
+            #error_msg["message"] = "Module file not found"
+            #error_msg["data"] = self.module_path + module + ".yaml"
+            #return error_msg
+            self.error = self.error(status="error", message="Module not found", data=self.module_path + module + ".yaml")
+            return self.error.msg
 
 
 #ACTIVE MESSAGING: activation (pull, stop, ...) requests requiring a DockerClient()
