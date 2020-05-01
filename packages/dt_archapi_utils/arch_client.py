@@ -32,7 +32,6 @@ class ArchAPIClient:
 
         self.dt_version = "ente"
         self.status = ApiMessage()
-        #self.error = ApiMessage()
         self.work = ApiWorker(self.client)
 
         #Retract robot_type

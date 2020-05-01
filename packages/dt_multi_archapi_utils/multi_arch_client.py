@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+#This script is part of the DT Architecture Library for dt-commons
 
 import yaml
 import docker
@@ -7,16 +8,21 @@ import git
 import glob
 import requests
 import json
-"""
-#Import from another folder within dt-commons (no base image)
-from ..dt_archapi_utils import ArchAPIClient
-from ..dt_archapi_utils import ApiMessage
 
 from .device_list import DeviceList
-from .multi_request import MultiRequests
+#from .multi_request import MultiRequests
+from .multi_arch_worker import MultiApiWorker
+
+#Import from another folder within dt-commons (no base image)
+from packages.dt_archapi_utils.arch_client import ArchAPIClient
+from packages.dt_archapi_utils.arch_message import ApiMessage
 
 '''
-    DESCRIPTION:
+    THIS LIB INCLUDES FUNCTIONS THAT ALLOW TO COMMUNICATE WITH AN EXTENDED
+    ARCHITECTURE API RUNNING ON A SINGLE (PRIVILEGED) ROBOT AND ALLOW TO CONTROL
+    A SO CALLED FLEET THROUGH THIS ROBOT BY PASSING A SINGLE HTTP COMMAND. NOTE
+    THAT THIS LIB DOES NOT SPECIFY THE REQUIRED API FOR THAT. I.E. THE
+    REQUIRED SERVER IS NOT RUNNING WITHIN THE LIBRARY
 '''
 
 class MultiArchAPIClient:
@@ -24,14 +30,15 @@ class MultiArchAPIClient:
         self.client = client
         self.port = port
         self.status = ApiMessage()
-        self.error = ApiMessage()
 
-        #Set up fleet list
+        #Set up fleet list = list of hostnames in fleet excl. town
         self.fleet = deviceList(fleet)
         if self.fleet.as_array is []:
-            self.status("error", "Fleet file was not found", self.fleet.path_to_list)
+            self.status.error(status="error", msg="Fleet file was not found", data=self.fleet.path_to_list)
         else:
             self.fleet = self.fleet.as_array
+            #Initialize worker with fleet and port
+            self.work = MultiApiWorker(fleet=self.fleet, port=self.port)
 
         #Define robot_type
         self.robot_type = "none"
@@ -48,14 +55,22 @@ class MultiArchAPIClient:
 
         #Give town an ArchAPIClient
         self.town_name = os.environ['VEHICLE_NAME']
-        self.town_api = ArchAPIClient(self.town_name, self.robot_type, self.client)
+        self.town_api = ArchAPIClient(hostname=self.town_name, robot_type=self.robot_type, client=self.client)
 
 
-    #TOWN CONFIGURATION: #extended with device info from config file
+    #RESPONSE MESSAGES: extended with device info from fleet file
     #Passive Messaging
     def default_response(self):
-        return self.town_api.default_response
+        #Initialize fleet_status with town response
+        def_response_list = {}
+        def_response_list[str(self.town_name)] = self.town_api.default_response
+        #Proceed with messages from fleet
+        for name in self.fleet:
+            def_response_list[str(name)] = self.work.http_get_request(endpoint="/", port=self.port)
 
+        return def_response_list
+
+"""
     def configuration_info(self, config):
         #Include config info on fleet (per device)
         self.c_info_1 = self.town_api.configuration_info(config)
@@ -102,7 +117,7 @@ class MultiArchAPIClient:
             for i in [0, len(self.fleet)-1]:
                 self.requests(i) = requests.get(url = self.url_list(i))
                 self.messages(i) = self.requests(i).json()
-
+"""
 
 
 
@@ -200,4 +215,3 @@ class MultiArchAPIClient:
         else:
             self.fleet = fleet #custom fleet as list/array
         '''
-"""
