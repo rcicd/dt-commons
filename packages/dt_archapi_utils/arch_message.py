@@ -6,12 +6,21 @@ import datetime
 class ApiMessage:
     def __init__(self, status="ok", message=None, data=None):
         self.msg = {}
+        #Initialize
         self.msg["status"] = status
         self.msg["message"] = message
         self.msg["data"] = data
 
     def set_status(self, new_status):
         self.msg["status"] = new_status
+
+    #Call as error message
+    def error(self, status="error", msg=None, data=None):
+        self.err = {}
+        self.err["status"] = status
+        self.err["message"] = message
+        self.err["data"] = data
+        return self.err
 
     def __str__(self):
         return self.msg
