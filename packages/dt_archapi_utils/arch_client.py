@@ -129,7 +129,7 @@ class ArchAPIClient:
                 error_msg = {}
                 error_msg["status"] = "error"
                 error_msg["message"] = "Module file not found"
-                error_msg["data"] = self.module_path + "/" + module_name + ".yaml"
+                error_msg["data"] = self.module_path + file + ".yaml" #+ "/"
                 return error_msg
                 #return self.error("error", "Module file not found", self.module_path + "/" + file + ".yaml").msg
         return mod_list
@@ -137,7 +137,7 @@ class ArchAPIClient:
 
     def module_info(self, module):
         try:
-            with open(self.module_path + "/" + module + ".yaml", 'r') as fd:
+            with open(self.module_path + module + ".yaml", 'r') as fd: #"/" +
                 mod_info = yaml.load(fd, Loader=yaml.FullLoader)
                 config = mod_info["configuration"]
 
@@ -174,7 +174,7 @@ class ArchAPIClient:
             error_msg = {}
             error_msg["status"] = "error"
             error_msg["message"] = "Module file not found"
-            error_msg["data"] = self.module_path + module_name + ".yaml"
+            error_msg["data"] = self.module_path + module + ".yaml"
             return error_msg
             #return self.error("error", "Module not found", self.module_path + module + ".yaml").msg
 
