@@ -76,56 +76,70 @@ class ArchAPIClient:
     #    return self.configuration_status
 
     def configuration_list(self):
-        configuration_list = {} #re-initialize every time called for (empty when error)
+        config_list = {} #re-initialize every time called for (empty when error)
         if self.config_path is not None:
             config_paths = glob.glob(self.config_path + "/*.yaml")
-            configuration_list["configurations"] = [os.path.splitext(os.path.basename(f))[0] for f in config_paths]
+            config_list["configurations"] = [os.path.splitext(os.path.basename(f))[0] for f in config_paths]
         else: #error msg
-            return self.error("error", "could not find configurations (dt-docker-data)", None).msg
-        return configuration_list
+            self.status["status"] = "error"
+            self.status["message"].append("could not find configurations (dt-docker-data)")
+            return self.status
+            #return self.status("error", "could not find configurations (dt-docker-data)", None).msg
+        return config_list
 
 
     def configuration_info(self, config):
         try:
             with open(self.config_path + "/" + config + ".yaml", 'r') as file:
-                configuration_info = yaml.load(file, Loader=yaml.FullLoader)
-                if "modules" in configuration_info:
-                    mods = configuration_info["modules"]
+                config_info = yaml.load(file, Loader=yaml.FullLoader)
+                if "modules" in config_info:
+                    mods = config_info["modules"]
                     for m in mods:
                         if "type" in mods[m]:
                             mod_type = mods[m]["type"]
                             mod_config = self.module_info(mod_type)
                             if "configuration" in mod_config:
                                 #Virtually append module configuration info to configuration file
-                                configuration_info["modules"][m]["configuration"] = mod_config["configuration"]
+                                config_info["modules"][m]["configuration"] = mod_config["configuration"]
 
-                return configuration_info
+                return config_info
 
         except FileNotFoundError: #error msg
-            return self.error("error", "Configuration file not found", self.config_path + "/" + config + ".yaml").msg
+            error_msg = {}
+            error_msg["status"] = "error"
+            error_msg["message"] = "Configuration file not found "
+            error_msg["data"] = self.config_path + "/" + config + ".yaml"
+            return error_msg
+            #return self.error("error", "Configuration file not found", self.config_path + "/" + config + ".yaml").msg
 
 
     def module_list(self):
-        module_list = {} #re-initialize every time called for (empty when error)
+        mod_list = {} #re-initialize every time called for (empty when error)
         yaml_paths = glob.glob(self.module_path + "/*.yaml")
+        mod_list["modules"] = []
         for file in yaml_paths:
             try:
                 with open(file, 'r') as fd:
                     print ("loading module: " + file)
                     config = yaml.load(fd, Loader=yaml.FullLoader)
                     filename, ext = os.path.splitext(os.path.basename(file))
-                    module_list["modules"] = [] #put here, so error msg can be sent
-                    module_list["modules"].append(filename)
+                    #mod_list["modules"] = [] #put here, so error msg can be sent
+                    mod_list["modules"].append(filename)
             except FileNotFoundError: #error msg
-                return self.error("error", "Module file not found", self.module_path + "/" + file + ".yaml").msg
-        return module_list
+                error_msg = {}
+                error_msg["status"] = "error"
+                error_msg["message"] = "Module file not found"
+                error_msg["data"] = self.module_path + "/" + module_name + ".yaml"
+                return error_msg
+                #return self.error("error", "Module file not found", self.module_path + "/" + file + ".yaml").msg
+        return mod_list
 
 
     def module_info(self, module):
         try:
             with open(self.module_path + "/" + module + ".yaml", 'r') as fd:
-                module_info = yaml.load(fd, Loader=yaml.FullLoader)
-                config = module_info["configuration"]
+                mod_info = yaml.load(fd, Loader=yaml.FullLoader)
+                config = mod_info["configuration"]
 
                 #Update ports for pydocker from docker-compose
                 if "ports" in config:
@@ -154,17 +168,22 @@ class ArchAPIClient:
                 if "image" in config:
                     config["image"] = config["image"].replace('${ARCH-arm32v7}','arm32v7' )
 
-                return module_info
+                return mod_info
 
         except FileNotFoundError: #error msg
-            return self.error("error", "Module not found", self.module_path + module + ".yaml").msg
+            error_msg = {}
+            error_msg["status"] = "error"
+            error_msg["message"] = "Module file not found"
+            error_msg["data"] = self.module_path + module_name + ".yaml"
+            return error_msg
+            #return self.error("error", "Module not found", self.module_path + module + ".yaml").msg
 
 
 #ACTIVE MESSAGING: activation (pull, stop, ...) requests requiring a DockerClient()
     def configuration_set_config(self, config):
         #Get virtually extended config file with module specs
         mod_config = self.configuration_info(config)
-        return self.work.set_config(mod_config)
+        return str(self.work.set_config(mod_config))
 
 
     def pull_image(self, url):
