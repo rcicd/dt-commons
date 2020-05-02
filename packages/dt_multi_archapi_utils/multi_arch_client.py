@@ -71,25 +71,6 @@ class MultiArchAPIClient:
         else: #return only error from controlling device
             return def_response_list
 
-"""
-    def configuration_list(self, fleet=None):
-        #Initialize worker with fleet and port
-        fleet = self.cl_fleet.clean_list(fleet)
-        self.work = MultiApiWorker(fleet=fleet, port=self.port)
-
-        #SCAN FLEET = LISTEN TO AVAHI SERVICES
-        config_list = {} #re-initialize every time called for (empty when error)
-        current_fleet = self.scan.for_devices
-        config_list[str(self.main_name)] = self.main_api.configuration_list
-        if self.config_path is not None:
-            config_paths = glob.glob(self.config_path + "/*.yaml")
-            config_list["configurations"] = [os.path.splitext(os.path.basename(f))[0] for f in config_paths]
-        else: #error msg
-            self.status["status"] = "error"
-            self.status["message"].append("could not find configurations (dt-docker-data)")
-            return self.status
-        return config_list
-"""
 
     def configuration_info(self, config, fleet):
         #Initialize worker with fleet and port
@@ -147,6 +128,26 @@ class MultiArchAPIClient:
         else: #error msg
             return config_info
 
+
+"""
+    def configuration_list(self, fleet=None):
+        #Initialize worker with fleet and port
+        fleet = self.cl_fleet.clean_list(fleet)
+        self.work = MultiApiWorker(fleet=fleet, port=self.port)
+
+        #SCAN FLEET = LISTEN TO AVAHI SERVICES
+        config_list = {} #re-initialize every time called for (empty when error)
+        current_fleet = self.scan.for_devices
+        config_list[str(self.main_name)] = self.main_api.configuration_list
+        if self.config_path is not None:
+            config_paths = glob.glob(self.config_path + "/*.yaml")
+            config_list["configurations"] = [os.path.splitext(os.path.basename(f))[0] for f in config_paths]
+        else: #error msg
+            self.status["status"] = "error"
+            self.status["message"].append("could not find configurations (dt-docker-data)")
+            return self.status
+        return config_list
+"""
 
 
 
