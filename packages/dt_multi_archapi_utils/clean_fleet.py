@@ -34,7 +34,7 @@ class CleanFleet:
         #Warning
         if fleet is None:
             print("No fleet specified, please specify to avoid errors... using default file")
-            self.fleet = "default_device_list"
+            self.fleet = "default-device-list"
             #redundant? - might not accept the endpoint anyway
             #return self.status.error(status="error", msg="No fleet was specified, use /fleet/.../<fleet>")
 
@@ -51,7 +51,7 @@ class CleanFleet:
 
         except FileNotFoundError: #error msg
             print("Error: did not find file")
-            fleet_list = "rom"
+            fleet_list = {"rom"}
             return fleet_list
             #return self.status.error(status="error", msg="data cannot be JSON decoded")
 
