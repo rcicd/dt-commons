@@ -14,15 +14,14 @@ from dt_archapi_utils.arch_message import ApiMessage
 '''
 
 class CleanFleet:
-    def __init__(self, hostname="hostname"):
-        self.hostname = hostname
+    def __init__(self):
         self.status = ApiMessage()
 
 
     def clean_list(self, fleet=None):
         #Warning
         if fleet is None:
-            print("No fleet specified for " + hostname + ", please specify to avoid errors... using default file")
+            print("No fleet specified, please specify to avoid errors... using default file")
             fleet = "default_device_list"
             #redundant? - might not accept the endpoint anyway
             #return self.status.error(status="error", msg="No fleet was specified, use /fleet/.../<fleet>")
