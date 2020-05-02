@@ -62,7 +62,7 @@ class MultiArchAPIClient:
         #Initialize with main response
         def_response_list = self.main_api.default_response
 
-        if def_response_list["status"] is "ok":
+        if def_response_list["status"] = "ok":
             #Proceed with messages from fleet
             for name in fleet:
                 def_response_list["data"][str(name)] = self.work.http_get_request(device=str(name), endpoint="/")
@@ -79,54 +79,54 @@ class MultiArchAPIClient:
 
         #Initialize with main response & check on error
         config_info = self.main_api.configuration_info(config)
-        if config_info["status"] is not "error":
-            #Proceed with messages from fleet devices in configuration file
-            try:
-                with open(self.config_path + "/" + config + ".yaml", 'r') as file:
-                    device_info = yaml.load(file, Loader=yaml.FullLoader)
-                    if "devices" in device_info:
-                        devices = device_info["devices"]
+        #if config_info["status"] != "error":
+        #Proceed with messages from fleet devices in configuration file
+        try:
+            with open(self.config_path + "/" + config + ".yaml", 'r') as file:
+                device_info = yaml.load(file, Loader=yaml.FullLoader)
+                if "devices" in device_info:
+                    devices = device_info["devices"]
 
-                        if "duckiebot" in devices:
-                            if "configuration" in devices["duckiebot"]:
-                                db_configuration = devices["duckiebot"]["configuration"]
-                                for db_conf in db_configuration:
-                                    #Danger - Retrieve static dt-architecture-data info using ArchAPIClient functions,
-                                    #without client specified! We do not want an option to change the robot_type within
-                                    #the already defined ArchAPIClient. This would not follow the ArchAPI approach.
-                                    new_robot_type_as_duckiebot = ArchAPIClient(robot_type="duckiebot")
-                                    db_configuration[str(db_conf)] = new_robot_type_as_duckiebot.configuration_info(db_conf)
+                    if "duckiebot" in devices:
+                        if "configuration" in devices["duckiebot"]:
+                            db_configuration = devices["duckiebot"]["configuration"]
+                            for db_conf in db_configuration:
+                                #Danger - Retrieve static dt-architecture-data info using ArchAPIClient functions,
+                                #without client specified! We do not want an option to change the robot_type within
+                                #the already defined ArchAPIClient. This would not follow the ArchAPI approach.
+                                new_robot_type_as_duckiebot = ArchAPIClient(robot_type="duckiebot")
+                                db_configuration[str(db_conf)] = new_robot_type_as_duckiebot.configuration_info(db_conf)
 
-                        if "watchtower" in devices:
-                            if "configuration" in devices["watchtower"]:
-                                wt_configuration = devices["watchtower"]["configuration"]
-                                for wt_conf in wt_configuration:
-                                    new_robot_type_as_watchtower = ArchAPIClient(robot_type="watchtower")
-                                    wt_configuration[str(wt_conf)] = new_robot_type_as_watchtower.configuration_info(wt_conf)
+                    if "watchtower" in devices:
+                        if "configuration" in devices["watchtower"]:
+                            wt_configuration = devices["watchtower"]["configuration"]
+                            for wt_conf in wt_configuration:
+                                new_robot_type_as_watchtower = ArchAPIClient(robot_type="watchtower")
+                                wt_configuration[str(wt_conf)] = new_robot_type_as_watchtower.configuration_info(wt_conf)
 
-                        if "greenstation" in devices:
-                            if "configuration" in devices["greenstation"]:
-                                gs_configuration = devices["greenstation"]["configuration"]
-                                for gs_conf in gs_configuration:
-                                    new_robot_type_as_greenstation = ArchAPIClient(robot_type="greenstation")
-                                    gs_configuration[str(gs_conf)] = new_robot_type_as_greenstation.configuration_info(gs_conf)
+                    if "greenstation" in devices:
+                        if "configuration" in devices["greenstation"]:
+                            gs_configuration = devices["greenstation"]["configuration"]
+                            for gs_conf in gs_configuration:
+                                new_robot_type_as_greenstation = ArchAPIClient(robot_type="greenstation")
+                                gs_configuration[str(gs_conf)] = new_robot_type_as_greenstation.configuration_info(gs_conf)
 
-                        if "duckiedrone" in devices:
-                            if "configuration" in devices["greenstation"]:
-                                dd_configuration = devices["greenstation"]["configuration"]
-                                for dd_conf in dd_configuration:
-                                    new_robot_type_as_duckiedrone = ArchAPIClient(robot_type="duckiedrone")
-                                    dd_configuration[str(dd_conf)] = new_robot_type_as_duckiedrone.configuration_info(dd_conf)
+                    if "duckiedrone" in devices:
+                        if "configuration" in devices["greenstation"]:
+                            dd_configuration = devices["greenstation"]["configuration"]
+                            for dd_conf in dd_configuration:
+                                new_robot_type_as_duckiedrone = ArchAPIClient(robot_type="duckiedrone")
+                                dd_configuration[str(dd_conf)] = new_robot_type_as_duckiedrone.configuration_info(dd_conf)
 
-                #Append retracted info to config_info
-                config_info["devices"] = devices
-                return config_info
-
-            except FileNotFoundError: #error msg
-                return self.status.error(status="error", msg="Configuration file not found in " + self.config_path + "/" + config + ".yaml")
-
-        else: #error msg
+            #Append retracted info to config_info
+            config_info["devices"] = devices
             return config_info
+
+        except FileNotFoundError: #error msg
+            return self.status.error(status="error", msg="Configuration file not found in " + self.config_path + "/" + config + ".yaml")
+
+        #else: #error msg
+        #    return config_info
 
 
 """

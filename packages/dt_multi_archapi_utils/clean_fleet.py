@@ -17,7 +17,6 @@ class CleanFleet:
     def __init__(self):
         self.status = ApiMessage()
 
-
     def clean_list(self, fleet=None):
         #Warning
         if fleet is None:
