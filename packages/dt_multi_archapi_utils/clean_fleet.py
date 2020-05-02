@@ -40,7 +40,7 @@ class CleanFleet:
 
         #For testing & development only
         try:
-            print(self.fleet_path + self.fleet + ".yaml", 'r')
+            print(self.fleet_path + self.fleet + ".yaml")
             with open(self.fleet_path + self.fleet + ".yaml", 'r') as f:
                 file = yaml.load(f, Loader=yaml.FullLoader)
                 if "devices" in file:
@@ -51,7 +51,9 @@ class CleanFleet:
 
         except FileNotFoundError: #error msg
             print("Error: did not find file")
-            return self.status.error(status="error", msg="data cannot be JSON decoded")
+            fleet_list = "rom"
+            return fleet_list
+            #return self.status.error(status="error", msg="data cannot be JSON decoded")
 
 """
         #Use fleet file written to disc through Dashboard
