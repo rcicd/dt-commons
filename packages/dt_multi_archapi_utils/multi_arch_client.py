@@ -84,6 +84,8 @@ class MultiArchAPIClient:
         try:
             with open(self.config_path + "/" + config + ".yaml", 'r') as file:
                 device_info = yaml.load(file, Loader=yaml.FullLoader)
+                print(device_info)
+                print("devices" in device_info)
                 if "devices" in device_info:
                     devs = device_info["devices"]
 
@@ -118,8 +120,9 @@ class MultiArchAPIClient:
                                 new_robot_type_as_duckiedrone = ArchAPIClient(robot_type="duckiedrone")
                                 dd_configuration[str(dd_conf)] = new_robot_type_as_duckiedrone.configuration_info(dd_conf)
 
-                #Append retracted info to config_info
-                config_info["devices"] = device_info["devices"]
+                    #Append retracted info to config_info
+                    config_info["devices"] = device_info["devices"]
+
                 return config_info
 
         except FileNotFoundError: #error msg

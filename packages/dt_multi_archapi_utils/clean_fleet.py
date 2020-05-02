@@ -26,7 +26,7 @@ class CleanFleet:
             #return self.status.error(status="error", msg="No fleet was specified, use /fleet/.../<fleet>")
 
         #For testing & development only
-        fleet_path = "/data/assets/dt-architecture-data/lists"
+        fleet_path = "/data/assets/dt-architecture-data/lists/"
         path_to_list = fleet_path + "/" + fleet + ".yaml"
         try:
             with open(path_to_list, 'r') as f:
@@ -35,6 +35,7 @@ class CleanFleet:
             return fleet_list
 
         except FileNotFoundError: #error msg
+            print("Error: did not find file")
             return self.status.error(status="error", msg="data cannot be JSON decoded")
 
 """
