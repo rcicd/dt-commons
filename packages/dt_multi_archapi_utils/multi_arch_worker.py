@@ -33,7 +33,7 @@ class MultiApiWorker:
         message_list = {}
         for name in self.fleet:
             #Create request url and request object
-            url = str(device) + '.local:' + str(self.port) + "/device" + endpoint
+            url = 'http://' + str(device) + '.local:' + str(self.port) + '/device' + endpoint
             r = requests.get(url)
             if r.status_code != 200:
                 message_list[str(device)] = "error response: working for" + str(device) #for tests only
