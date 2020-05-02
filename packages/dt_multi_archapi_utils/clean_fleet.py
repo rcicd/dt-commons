@@ -3,7 +3,8 @@
 
 import yaml
 import os
-import time
+import git
+import glob
 
 from dt_archapi_utils.arch_message import ApiMessage
 
@@ -17,6 +18,13 @@ class CleanFleet:
     def __init__(self):
         self.status = ApiMessage()
 
+        #Include ente version of dt-architecture-data repo
+        if not os.path.isdir("/data/assets/dt-architecture-data"):
+            os.makedirs("/data/assets", exist_ok=True)
+            git.Git("/data/assets").clone("git://github.com/duckietown/dt-architecture-data.git", branch=self.dt_version)
+        self.fleet_path = "/data/assets/dt-architecture-data/lists/"
+
+
     def clean_list(self, fleet=None):
         #Warning
         if fleet is None:
@@ -26,8 +34,8 @@ class CleanFleet:
             #return self.status.error(status="error", msg="No fleet was specified, use /fleet/.../<fleet>")
 
         #For testing & development only
-        fleet_path = "/data/assets/dt-architecture-data/lists/"
-        path_to_list = fleet_path + "/" + fleet + ".yaml"
+        #fleet_path = "/data/assets/dt-architecture-data/lists/"
+        path_to_list = self.fleet_path + fleet + ".yaml"
         try:
             with open(path_to_list, 'r') as f:
                 file = yaml.load(f, Loader=yaml.FullLoader)
