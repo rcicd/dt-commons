@@ -10,8 +10,8 @@ import requests
 import json
 
 from .device_list import DeviceList
-#from .multi_request import MultiRequests
 from .multi_arch_worker import MultiApiWorker
+from .clean_fleet import CleanFleet
 
 #Import from another folder within dt-commons (no base image)
 from dt_archapi_utils.arch_client import ArchAPIClient
@@ -26,19 +26,9 @@ from dt_archapi_utils.arch_message import ApiMessage
 '''
 
 class MultiArchAPIClient:
-    def __init__(self, fleet=None, client=None, port="8083"): #fleet as yaml file without .yaml
+    def __init__(self, client=None, port="8083"): #fleet as yaml file without .yaml
         self.client = client
         self.port = port
-        self.status = ApiMessage()
-
-        #Set up fleet list = list of hostnames in fleet excl. town
-        self.fleet = DeviceList(fleet)
-        if self.fleet.as_array is []:
-            self.status.error(status="error", msg="Fleet file was not found", data=self.fleet.path_to_list)
-        else:
-            self.fleet = self.fleet.as_array
-            #Initialize worker with fleet and port
-            self.work = MultiApiWorker(fleet=self.fleet, port=self.port)
 
         #Define robot_type
         self.robot_type = "none"
@@ -49,26 +39,115 @@ class MultiArchAPIClient:
         else: #error upon initialization = status
             self.status("error", "Could not find robot type in expected paths", None)
 
-        #Initialize folders and directories
+        #Initialize folders and classes
         self.current_configuration = "none"
         self.dt_version = "ente"
+        self.status = ApiMessage()
+        self.cl_fleet = CleanFleet()
 
-        #Give town an ArchAPIClient
-        self.town_name = os.environ['VEHICLE_NAME']
-        self.town_api = ArchAPIClient(hostname=self.town_name, robot_type=self.robot_type, client=self.client)
+        #Give main robot an ArchAPIClient
+        self.main_name = os.environ['VEHICLE_NAME']
+        self.main_api = ArchAPIClient(hostname=self.main_name, robot_type=self.robot_type, client=self.client)
+        self.config_path = self.main_api.config_path
+        self.module_path = self.main_api.module_path
 
 
     #RESPONSE MESSAGES: extended with device info from fleet file
     #Passive Messaging
-    def default_response(self):
-        #Initialize fleet_status with town response
-        def_response_list = {}
-        def_response_list[str(self.town_name)] = self.town_api.default_response
-        #Proceed with messages from fleet
-        for name in self.fleet:
-            def_response_list[str(name)] = self.work.http_get_request(endpoint="/", port=self.port)
+    def default_response(self, fleet):
+        #Initialize worker with fleet and port
+        fleet = self.cl_fleet.clean_list(fleet)
+        self.work = MultiApiWorker(fleet=fleet, port=self.port)
 
-        return def_response_list
+        #Initialize with main response
+        def_response_list = self.main_api.default_response
+
+        if def_response_list["status"] is "ok":
+            #Proceed with messages from fleet
+            for name in fleet:
+                def_response_list["data"][str(name)] = self.work.http_get_request(device=str(name), endpoint="/")
+            return def_response_list
+
+        else: #return only error from controlling device
+            return def_response_list
+
+"""
+    def configuration_list(self, fleet=None):
+        #Initialize worker with fleet and port
+        fleet = self.cl_fleet.clean_list(fleet)
+        self.work = MultiApiWorker(fleet=fleet, port=self.port)
+
+        #SCAN FLEET = LISTEN TO AVAHI SERVICES
+        config_list = {} #re-initialize every time called for (empty when error)
+        current_fleet = self.scan.for_devices
+        config_list[str(self.main_name)] = self.main_api.configuration_list
+        if self.config_path is not None:
+            config_paths = glob.glob(self.config_path + "/*.yaml")
+            config_list["configurations"] = [os.path.splitext(os.path.basename(f))[0] for f in config_paths]
+        else: #error msg
+            self.status["status"] = "error"
+            self.status["message"].append("could not find configurations (dt-docker-data)")
+            return self.status
+        return config_list
+"""
+
+    def configuration_info(self, config, fleet):
+        #Initialize worker with fleet and port
+        fleet = self.cl_fleet.clean_list(fleet)
+        self.work = MultiApiWorker(fleet=fleet, port=self.port)
+
+        #Initialize with main response & check on error
+        config_info = self.main_api.configuration_info(config)
+        if config_info["status"] is not "error":
+            #Proceed with messages from fleet devices in configuration file
+            try:
+                with open(self.config_path + "/" + config + ".yaml", 'r') as file:
+                    device_info = yaml.load(file, Loader=yaml.FullLoader)
+                    if "devices" in device_info:
+                        devices = device_info["devices"]
+
+                        if "duckiebot" in devices:
+                            if "configuration" in devices["duckiebot"]:
+                                db_configuration = devices["duckiebot"]["configuration"]
+                                for db_conf in db_configuration:
+                                    #Danger - Retrieve static dt-architecture-data info using ArchAPIClient functions,
+                                    #without client specified! We do not want an option to change the robot_type within
+                                    #the already defined ArchAPIClient. This would not follow the ArchAPI approach.
+                                    new_robot_type_as_duckiebot = ArchAPIClient(robot_type="duckiebot")
+                                    db_configuration[str(db_conf)] = new_robot_type_as_duckiebot.configuration_info(db_conf)
+
+                        if "watchtower" in devices:
+                            if "configuration" in devices["watchtower"]:
+                                wt_configuration = devices["watchtower"]["configuration"]
+                                for wt_conf in wt_configuration:
+                                    new_robot_type_as_watchtower = ArchAPIClient(robot_type="watchtower")
+                                    wt_configuration[str(wt_conf)] = new_robot_type_as_watchtower.configuration_info(wt_conf)
+
+                        if "greenstation" in devices:
+                            if "configuration" in devices["greenstation"]:
+                                gs_configuration = devices["greenstation"]["configuration"]
+                                for gs_conf in gs_configuration:
+                                    new_robot_type_as_greenstation = ArchAPIClient(robot_type="greenstation")
+                                    gs_configuration[str(gs_conf)] = new_robot_type_as_greenstation.configuration_info(gs_conf)
+
+                        if "duckiedrone" in devices:
+                            if "configuration" in devices["greenstation"]:
+                                dd_configuration = devices["greenstation"]["configuration"]
+                                for dd_conf in dd_configuration:
+                                    new_robot_type_as_duckiedrone = ArchAPIClient(robot_type="duckiedrone")
+                                    dd_configuration[str(dd_conf)] = new_robot_type_as_duckiedrone.configuration_info(dd_conf)
+
+                #Append retracted info to config_info
+                config_info["devices"] = devices
+                return config_info
+
+            except FileNotFoundError: #error msg
+                return self.status.error(status="error", msg="Configuration file not found in " + self.config_path + "/" + config + ".yaml")
+
+        else: #error msg
+            return config_info
+
+
 
 
 

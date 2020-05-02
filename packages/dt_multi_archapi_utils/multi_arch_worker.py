@@ -30,15 +30,14 @@ class MultiApiWorker:
         self.process = None
 
 
-    def http_get_request(self, endpoint=None):
+    def http_get_request(self, device=None, endpoint=None):
         message_list = {}
-        for device in self.fleet:
+        for name in self.fleet:
             #Create request url and request object
             url = str(device) + ':' + str(self.port) + "/device" + endpoint
             r = requests.get(url)
             if r.status_code != 200:
-                #for tests only
-                message_list[str(device)] = "error response: working for" + str(device)
+                message_list[str(device)] = "error response: working for" + str(device) #for tests only
                 #return self.status.error(status="error", msg="bad request for" + str(device) + str(r.status.code))
 
             try:
@@ -47,9 +46,12 @@ class MultiApiWorker:
             except ValueError: #error msg
                 return self.status.error(status="error", msg="data cannot be JSON decoded")
 
+        #Only if without error, return list
         return message_list
 
 
+    def http_post_request(self, endpoint=None):
+        return None
 
 
 

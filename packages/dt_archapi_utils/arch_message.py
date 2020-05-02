@@ -19,7 +19,7 @@ class ApiMessage:
         self.err = {}
         self.err["status"] = status
         self.err["message"] = msg
-        self.err["data"] = data
+        self.err["data"] = data #should be empty upon error (see Design Document)
         return self.err
 
     def __str__(self):
