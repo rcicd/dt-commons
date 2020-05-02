@@ -4,11 +4,10 @@
 import docker
 import os
 import time
-import requests as r
+import requests
 
 from multiprocessing import Process, Manager
 from dt_archapi_utils.arch_message import ApiMessage, JobLog
-
 
 '''
     THIS SCRIPT TAKES CARE OF SENDING AND RECEIVING HTTP REQUESTS USING THE

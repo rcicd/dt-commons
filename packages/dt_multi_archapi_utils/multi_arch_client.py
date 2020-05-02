@@ -87,7 +87,7 @@ class MultiArchAPIClient:
                 if "devices" in device_info:
                     devs = device_info["devices"]
 
-                    if "duckiebot" in devs:
+                    if "duckiebot" in device_info["devices"]:
                         if "configuration" in devs["duckiebot"]:
                             db_configuration = devs["duckiebot"]["configuration"]
                             for db_conf in db_configuration:
@@ -97,21 +97,21 @@ class MultiArchAPIClient:
                                 new_robot_type_as_duckiebot = ArchAPIClient(robot_type="duckiebot")
                                 db_configuration[str(db_conf)] = new_robot_type_as_duckiebot.configuration_info(db_conf)
 
-                    if "watchtower" in devs:
+                    if "watchtower" in device_info["devices"]:
                         if "configuration" in devs["watchtower"]:
                             wt_configuration = devs["watchtower"]["configuration"]
                             for wt_conf in wt_configuration:
                                 new_robot_type_as_watchtower = ArchAPIClient(robot_type="watchtower")
                                 wt_configuration[str(wt_conf)] = new_robot_type_as_watchtower.configuration_info(wt_conf)
 
-                    if "greenstation" in devs:
+                    if "greenstation" in device_info["devices"]:
                         if "configuration" in devs["greenstation"]:
                             gs_configuration = devs["greenstation"]["configuration"]
                             for gs_conf in gs_configuration:
                                 new_robot_type_as_greenstation = ArchAPIClient(robot_type="greenstation")
                                 gs_configuration[str(gs_conf)] = new_robot_type_as_greenstation.configuration_info(gs_conf)
 
-                    if "duckiedrone" in devs:
+                    if "duckiedrone" in device_info["devices"]:
                         if "configuration" in devs["greenstation"]:
                             dd_configuration = devs["greenstation"]["configuration"]
                             for dd_conf in dd_configuration:
@@ -119,7 +119,7 @@ class MultiArchAPIClient:
                                 dd_configuration[str(dd_conf)] = new_robot_type_as_duckiedrone.configuration_info(dd_conf)
 
                 #Append retracted info to config_info
-                config_info["devices"] = devs
+                config_info["devices"] = device_info["devices"]
                 return config_info
 
         except FileNotFoundError: #error msg
