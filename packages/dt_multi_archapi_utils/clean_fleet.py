@@ -6,6 +6,7 @@ import os
 import git
 import glob
 
+from git import Repo
 from dt_archapi_utils.arch_message import ApiMessage
 
 '''
@@ -17,6 +18,7 @@ from dt_archapi_utils.arch_message import ApiMessage
 class CleanFleet:
     def __init__(self):
         self.status = ApiMessage()
+        self.fleet = None
 
         #Include ente version of dt-architecture-data repo
         if not os.path.isdir("/data/assets/dt-architecture-data"):
@@ -26,20 +28,25 @@ class CleanFleet:
 
 
     def clean_list(self, fleet=None):
+        self.fleet = fleet
+        fleet_list = {}
+
         #Warning
         if fleet is None:
             print("No fleet specified, please specify to avoid errors... using default file")
-            fleet = "default_device_list"
+            self.fleet = "default_device_list"
             #redundant? - might not accept the endpoint anyway
             #return self.status.error(status="error", msg="No fleet was specified, use /fleet/.../<fleet>")
 
         #For testing & development only
-        #fleet_path = "/data/assets/dt-architecture-data/lists/"
-        path_to_list = self.fleet_path + fleet + ".yaml"
         try:
-            with open(path_to_list, 'r') as f:
+            print(self.fleet_path + self.fleet + ".yaml", 'r')
+            with open(self.fleet_path + self.fleet + ".yaml", 'r') as f:
                 file = yaml.load(f, Loader=yaml.FullLoader)
-                fleet_list = file["devices"]
+                if "devices" in file:
+                    fleet_list = file["devices"]
+                    return fleet_list
+
             return fleet_list
 
         except FileNotFoundError: #error msg
