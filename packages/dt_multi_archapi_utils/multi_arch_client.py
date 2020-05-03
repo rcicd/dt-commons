@@ -60,7 +60,7 @@ class MultiArchAPIClient:
         self.work = MultiApiWorker(fleet=fleet, port=self.port)
 
         #Initialize with main response
-        def_response_list = self.main_api.default_response
+        def_response_list = self.main_api.default_response()
 
         #if def_response_list["status"] is 'ok':
         def_response_list["data"] = None
