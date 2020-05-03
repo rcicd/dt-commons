@@ -88,8 +88,26 @@ class MultiArchAPIClient:
                 print(device_info)
                 print("devices" in device_info)
                 if "devices" in device_info:
-                    devs = device_info["devices"]
+                    for device in device_info["devices"]:
+                        if "configuration" in device_info["devices"][device]:
+                            configuration = device_info["devices"][device]["configuration"]
+                            for c_name in configuration:
+                                new_robot_type_as_device = ArchAPIClient(robot_type=device)
+                                configuration[c_name] = new_robot_type_as_device.configuration_info(c_name)
 
+                    config_info["devices"] = device_info["devices"]
+
+                return config_info
+
+        except FileNotFoundError: #error msg
+            print(self.status.error(status="error", msg="Configuration file not found in " + self.config_path + "/" + config + ".yaml"))
+
+
+
+"""
+    Part of configuration_info
+                ""
+                    devs = device_info["devices"]
                     if "duckiebot" in device_info["devices"]:
                         if "configuration" in devs["duckiebot"]:
                             db_configuration = devs["duckiebot"]["configuration"]
@@ -98,42 +116,34 @@ class MultiArchAPIClient:
                                 #without client specified! We do not want an option to change the robot_type within
                                 #the already defined ArchAPIClient. This would not follow the ArchAPI approach.
                                 new_robot_type_as_duckiebot = ArchAPIClient(robot_type="duckiebot")
-                                db_configuration[str(db_conf)] = new_robot_type_as_duckiebot.configuration_info(db_conf)
+                                db_configuration[db_conf] = new_robot_type_as_duckiebot.configuration_info(db_conf)
 
                     if "watchtower" in device_info["devices"]:
                         if "configuration" in devs["watchtower"]:
                             wt_configuration = devs["watchtower"]["configuration"]
                             for wt_conf in wt_configuration:
                                 new_robot_type_as_watchtower = ArchAPIClient(robot_type="watchtower")
-                                wt_configuration[str(wt_conf)] = new_robot_type_as_watchtower.configuration_info(wt_conf)
+                                wt_configuration[wt_conf] = new_robot_type_as_watchtower.configuration_info(wt_conf)
 
                     if "greenstation" in device_info["devices"]:
                         if "configuration" in devs["greenstation"]:
                             gs_configuration = devs["greenstation"]["configuration"]
                             for gs_conf in gs_configuration:
                                 new_robot_type_as_greenstation = ArchAPIClient(robot_type="greenstation")
-                                gs_configuration[str(gs_conf)] = new_robot_type_as_greenstation.configuration_info(gs_conf)
+                                gs_configuration[gs_conf] = new_robot_type_as_greenstation.configuration_info(gs_conf)
 
                     if "duckiedrone" in device_info["devices"]:
                         if "configuration" in devs["greenstation"]:
                             dd_configuration = devs["greenstation"]["configuration"]
                             for dd_conf in dd_configuration:
                                 new_robot_type_as_duckiedrone = ArchAPIClient(robot_type="duckiedrone")
-                                dd_configuration[str(dd_conf)] = new_robot_type_as_duckiedrone.configuration_info(dd_conf)
-
+                                dd_configuration[dd_conf] = new_robot_type_as_duckiedrone.configuration_info(dd_conf)
+                ""
                     #Append retracted info to config_info
                     config_info["devices"] = device_info["devices"]
 
                 return config_info
 
-        except FileNotFoundError: #error msg
-            print(self.status.error(status="error", msg="Configuration file not found in " + self.config_path + "/" + config + ".yaml"))
-
-        #else: #error msg
-        #    return config_info
-
-
-"""
     def configuration_list(self, fleet=None):
         #Initialize worker with fleet and port
         fleet = self.cl_fleet.clean_list(fleet)
