@@ -19,6 +19,7 @@ class CleanFleet:
     def __init__(self):
         self.status = ApiMessage()
         self.fleet = None
+        self.dt_version = "ente"
 
         #Include ente version of dt-architecture-data repo, incl. lists
         if not os.path.isdir("/data/assets/dt-architecture-data/lists"):
