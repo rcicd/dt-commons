@@ -127,7 +127,7 @@ class MultiArchAPIClient:
                 return config_info
 
         except FileNotFoundError: #error msg
-            return self.status.error(status="error", msg="Configuration file not found in " + self.config_path + "/" + config + ".yaml")
+            print(self.status.error(status="error", msg="Configuration file not found in " + self.config_path + "/" + config + ".yaml"))
 
         #else: #error msg
         #    return config_info
