@@ -85,7 +85,7 @@ class MultiArchAPIClient:
         try:
             with open("/data/assets/dt-architecture-data/configurations/town/" + config + ".yaml", 'r') as file: #change to self.config_path + ...
                 device_info = yaml.load(file, Loader=yaml.FullLoader)
-                print(device_info + "within WITH")
+                print(device_info)
                 print("devices" in device_info)
                 if "devices" in device_info:
                     devs = device_info["devices"]

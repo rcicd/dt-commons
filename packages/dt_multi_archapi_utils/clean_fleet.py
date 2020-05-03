@@ -40,7 +40,7 @@ class CleanFleet:
                 file = yaml.load(f, Loader=yaml.FullLoader)
                 if "devices" in file:
                     fleet_list = file["devices"]
-                    print(str(fleet_list))
+                    print(fleet_list)
                     return fleet_list
 
             return fleet_list
