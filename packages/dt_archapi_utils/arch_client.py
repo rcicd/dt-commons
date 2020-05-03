@@ -4,6 +4,7 @@
 import yaml
 import docker
 import os
+import shutil
 import git
 import glob
 
@@ -46,8 +47,13 @@ class ArchAPIClient:
         else:
             self.robot_type = robot_type
 
-        #Include ente version of dt-architecture-data repo
-        if not os.path.isdir("/data/assets/dt-architecture-data"):
+        #Include !up-to-date! ente version of dt-architecture-data repo
+        if os.path.isdir("/data/assets/dt-architecture-data"):
+            #danger! bad coding could lead to mandatory reflashing
+            shutil.rmtree("/data/assets/dt-architecture-data")
+            os.makedirs("/data/assets", exist_ok=True)
+            git.Git("/data/assets").clone("git://github.com/duckietown/dt-architecture-data.git", branch=self.dt_version)
+        else:
             os.makedirs("/data/assets", exist_ok=True)
             git.Git("/data/assets").clone("git://github.com/duckietown/dt-architecture-data.git", branch=self.dt_version)
 

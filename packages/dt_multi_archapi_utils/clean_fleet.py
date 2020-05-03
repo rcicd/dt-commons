@@ -22,8 +22,8 @@ class CleanFleet:
         self.dt_version = "ente"
 
         #Include ente version of dt-architecture-data repo, incl. lists
-        if not os.path.isdir("/data/assets/dt-architecture-data/lists"):
-            git.Git("/data/assets").clone("git://github.com/duckietown/dt-architecture-data.git", branch=self.dt_version)
+        #if not os.path.isdir("/data/assets/dt-architecture-data"):
+        #    git.Git("/data/assets").clone("git://github.com/duckietown/dt-architecture-data.git", branch=self.dt_version)
         self.fleet_path = "/data/assets/dt-architecture-data/lists/"
 
 
