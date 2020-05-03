@@ -62,10 +62,11 @@ class MultiArchAPIClient:
         #Initialize with main response
         def_response_list = self.main_api.default_response
 
-        #if def_response_list["status"] == "ok":
+        #if def_response_list["status"] is 'ok':
+        def_response_list["data"] = {}
         #Proceed with messages from fleet
         for name in fleet:
-            def_response_list["data"][str(name)] = self.work.http_get_request(device=str(name), endpoint='/')
+            def_response_list["data"][name] = self.work.http_get_request(device=name, endpoint='/')
         return def_response_list
 
         #else: #return only error from controlling device

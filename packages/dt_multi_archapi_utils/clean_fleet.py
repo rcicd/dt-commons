@@ -20,9 +20,8 @@ class CleanFleet:
         self.status = ApiMessage()
         self.fleet = None
 
-        #Include ente version of dt-architecture-data repo
-        if not os.path.isdir("/data/assets/dt-architecture-data"):
-            os.makedirs("/data/assets", exist_ok=True)
+        #Include ente version of dt-architecture-data repo, incl. lists
+        if not os.path.isdir("/data/assets/dt-architecture-data/lists"):
             git.Git("/data/assets").clone("git://github.com/duckietown/dt-architecture-data.git", branch=self.dt_version)
         self.fleet_path = "/data/assets/dt-architecture-data/lists/"
 
