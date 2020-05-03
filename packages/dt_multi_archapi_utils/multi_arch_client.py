@@ -30,20 +30,20 @@ class MultiArchAPIClient:
         self.client = client
         self.port = port
 
+        #Initialize folders and classes
+        self.current_configuration = "none"
+        self.dt_version = "ente"
+        self.status = ApiMessage()
+        self.cl_fleet = CleanFleet()
+
         #Define robot_type
         self.robot_type = "none"
         if os.path.isfile("/data/config/robot_type"):
             self.robot_type = open("/data/config/robot_type").readline()
         elif os.path.isfile("/data/stats/init_sd_card/parameters/robot_type"):
             self.robot_type = open("/data/stats/init_sd_card/parameters/robot_type").readline()
-        else: #error upon initialization = status
+        else: #error upon initialization
             self.status("error", "Could not find robot type in expected paths", None)
-
-        #Initialize folders and classes
-        self.current_configuration = "none"
-        self.dt_version = "ente"
-        self.status = ApiMessage()
-        self.cl_fleet = CleanFleet()
 
         #Give main robot an ArchAPIClient
         self.main_name = os.environ['VEHICLE_NAME']
@@ -63,7 +63,7 @@ class MultiArchAPIClient:
         def_response_list = self.main_api.default_response
 
         #if def_response_list["status"] is 'ok':
-        def_response_list["data"] = {}
+        def_response_list["data"] = None
         #Proceed with messages from fleet
         for name in fleet:
             def_response_list["data"][name] = self.work.http_get_request(device=name, endpoint='/')

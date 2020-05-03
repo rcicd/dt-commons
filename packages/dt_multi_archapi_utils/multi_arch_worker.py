@@ -36,8 +36,8 @@ class MultiApiWorker:
             url = 'http://' + str(device) + '.local:' + str(self.port) + '/device' + endpoint
             r = requests.get(url)
             if r.status_code != 200:
-                message_list[str(device)] = "error response: working for" + str(device) #for tests only
-                #return self.status.error(status="error", msg="bad request for" + str(device) + str(r.status.code))
+                #message_list[str(device)] = "error response: working for" + str(device) #for tests only
+                return self.status.error(status="error", msg="bad request for" + str(device) + str(r.status.code))
 
             try:
                 #Save entire response message in dict

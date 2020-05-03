@@ -20,10 +20,6 @@ class CleanFleet:
         self.status = ApiMessage()
         self.fleet = None
         self.dt_version = "ente"
-
-        #Include ente version of dt-architecture-data repo, incl. lists
-        #if not os.path.isdir("/data/assets/dt-architecture-data"):
-        #    git.Git("/data/assets").clone("git://github.com/duckietown/dt-architecture-data.git", branch=self.dt_version)
         self.fleet_path = "/data/assets/dt-architecture-data/lists/"
 
 
@@ -40,11 +36,11 @@ class CleanFleet:
 
         #For testing & development only
         try:
-            print(self.fleet_path + self.fleet + ".yaml")
             with open(self.fleet_path + self.fleet + ".yaml", 'r') as f:
                 file = yaml.load(f, Loader=yaml.FullLoader)
                 if "devices" in file:
                     fleet_list = file["devices"]
+                    print(str(fleet_list))
                     return fleet_list
 
             return fleet_list
