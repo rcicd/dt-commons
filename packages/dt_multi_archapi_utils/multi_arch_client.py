@@ -63,7 +63,7 @@ class MultiArchAPIClient:
         def_response_list = self.main_api.default_response()
 
         #if def_response_list["status"] is 'ok':
-        def_response_list["data"] = None
+        def_response_list["data"] = {}
         #Proceed with messages from fleet
         for name in fleet:
             def_response_list["data"][name] = self.work.http_get_request(device=name, endpoint='/')
@@ -83,9 +83,9 @@ class MultiArchAPIClient:
         #if config_info["status"] != "error":
         #Proceed with messages from fleet devices in configuration file
         try:
-            with open(self.config_path + "/" + config + ".yaml", 'r') as file:
+            with open("/data/assets/dt-architecture-data/configurations/town/" + config + ".yaml", 'r') as file: #change to self.config_path + ...
                 device_info = yaml.load(file, Loader=yaml.FullLoader)
-                print(device_info)
+                print(device_info + "within WITH")
                 print("devices" in device_info)
                 if "devices" in device_info:
                     devs = device_info["devices"]
