@@ -49,7 +49,7 @@ class ArchAPIClient:
 
         #Include !up-to-date! ente version of dt-architecture-data repo
         if os.path.isdir("/data/assets/dt-architecture-data"):
-            #danger! bad coding could lead to mandatory reflashing
+            #danger! bad coding could lead to required reflashing
             shutil.rmtree("/data/assets/dt-architecture-data")
             os.makedirs("/data/assets", exist_ok=True)
             git.Git("/data/assets").clone("git://github.com/duckietown/dt-architecture-data.git", branch=self.dt_version)
