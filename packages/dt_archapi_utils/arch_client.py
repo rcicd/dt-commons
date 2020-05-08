@@ -107,9 +107,8 @@ class ArchAPIClient:
                 return config_info
 
         except FileNotFoundError: #error msg
-            #self.error = {}
-            #self.error["status"] = "error"
-            #self.error["message"] = "Configuration file not found "
+            #self.status.msg["status"] = "error"
+            #self.status.msg["message"] = "Configuration file not found "
             #self.error["data"] = self.config_path + "/" + config + ".yaml"
             #return self.error
             return self.status.error(status="error", msg="Configuration file not found", data=self.config_path + "/" + config + ".yaml")

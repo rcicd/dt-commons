@@ -92,8 +92,9 @@ class MultiArchAPIClient:
                         if "configuration" in device_info["devices"][device]:
                             for c_name in device_info["devices"][device]["configuration"]:
                                 new_robot_type_as_device = ArchAPIClient(robot_type=device)
-                                device_info["devices"][device]["configuration"][c_name] = {}
-                                device_info["devices"][device]["configuration"][c_name] = new_robot_type_as_device.configuration_info(config=c_name)
+                                c = device_info["devices"][device]["configuration"]
+                                device_info["devices"][device]["configuration"][str(c)] = {}
+                                device_info["devices"][device]["configuration"][str(c)] = new_robot_type_as_device.configuration_info(config=c_name)
 
                     config_info["devices"] = device_info["devices"]
 
