@@ -85,8 +85,8 @@ class MultiArchAPIClient:
         try:
             with open("/data/assets/dt-architecture-data/configurations/town/" + config + ".yaml", 'r') as file: #change to self.config_path + ...
                 device_info = yaml.load(file, Loader=yaml.FullLoader)
-                print(device_info)
-                print("devices" in device_info)
+                #print(device_info)
+                #print("devices" in device_info)
                 if "devices" in device_info:
                     for device in device_info["devices"]:
                         if "configuration" in device_info["devices"][device]:
@@ -102,7 +102,11 @@ class MultiArchAPIClient:
                 return config_info
 
         except FileNotFoundError: #error msg
-            print(self.status.error(status="error", msg="Configuration file not found in " + self.config_path + "/" + config + ".yaml"))
+            self.status.msg["status"] = "error"
+            self.status.msg["message"] = "Configuration file not found in " + self.config_path + "/" + config + ".yaml"
+            self.status.msg["data"] = {}
+            return {}
+            #print(self.status.error(status="error", msg="Configuration file not found in " + self.config_path + "/" + config + ".yaml"))
 
 
 
