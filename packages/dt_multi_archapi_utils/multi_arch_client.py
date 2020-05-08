@@ -63,7 +63,7 @@ class MultiArchAPIClient:
         empty = {}
         def_response_list = self.main_api.default_response()
 
-        if def_response_list["data"] is not empty: #error
+        if def_response_list["data"] is empty: #error
             return def_response_list
         else: #healthy
             def_response_list["data"] = {}
@@ -90,10 +90,10 @@ class MultiArchAPIClient:
                 if "devices" in device_info:
                     for device in device_info["devices"]:
                         if "configuration" in device_info["devices"][device]:
-                            c_name = device_info["devices"][device]["configuration"]
-                            new_robot_type_as_device = ArchAPIClient(robot_type=device)
-                            device_info["devices"][device]["configuration"][c_name] = {}
-                            device_info["devices"][device]["configuration"][c_name] = new_robot_type_as_device.configuration_info(config=c_name)
+                            for c_name in device_info["devices"][device]["configuration"]:
+                                new_robot_type_as_device = ArchAPIClient(robot_type=device)
+                                device_info["devices"][device]["configuration"][c_name] = {}
+                                device_info["devices"][device]["configuration"][c_name] = new_robot_type_as_device.configuration_info(config=c_name)
 
                     config_info["devices"] = device_info["devices"]
 
