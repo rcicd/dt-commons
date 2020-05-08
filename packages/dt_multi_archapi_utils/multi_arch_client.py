@@ -62,15 +62,14 @@ class MultiArchAPIClient:
         #Initialize with main response
         def_response_list = self.main_api.default_response()
 
-        #if def_response_list["status"] is 'ok':
-        def_response_list["data"] = {}
-        #Proceed with messages from fleet
-        for name in fleet:
-            def_response_list["data"][name] = self.work.http_get_request(device=name, endpoint='/')[name]
-        return def_response_list
-
-        #else: #return only error from controlling device
-        #    return def_response_list
+        if def_response_list["data"] = null: #error
+            return def_response_list
+        else: #healthy
+            def_response_list["data"] = {}
+            #Replace with messages from fleet
+            for name in fleet:
+                def_response_list["data"][name] = self.work.http_get_request(device=name, endpoint='/')[name]
+            return def_response_list
 
 
     def configuration_info(self, config, fleet):
@@ -92,6 +91,7 @@ class MultiArchAPIClient:
                         if "configuration" in device_info["devices"][device]:
                             c_name = device_info["devices"][device]["configuration"]
                             new_robot_type_as_device = ArchAPIClient(robot_type=device)
+                            device_info["devices"][device]["configuration"][c_name] = {}
                             device_info["devices"][device]["configuration"][c_name] = new_robot_type_as_device.configuration_info(config=c_name)
 
                     config_info["devices"] = device_info["devices"]
