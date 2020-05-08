@@ -60,9 +60,10 @@ class MultiArchAPIClient:
         self.work = MultiApiWorker(fleet=fleet, port=self.port)
 
         #Initialize with main response
+        empty = {}
         def_response_list = self.main_api.default_response()
 
-        if def_response_list["data"] = null: #error
+        if def_response_list["data"] is not empty: #error
             return def_response_list
         else: #healthy
             def_response_list["data"] = {}
