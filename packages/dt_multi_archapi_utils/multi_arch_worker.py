@@ -30,23 +30,30 @@ class MultiApiWorker:
 
 
     def http_get_request(self, device=None, endpoint=None):
-        message_list = {}
-        for name in self.fleet:
-            #Create request url and request object
-            url = 'http://' + str(device) + '.local:' + str(self.port) + '/device' + endpoint
-            r = requests.get(url)
-            if r.status_code != 200:
-                #message_list[str(device)] = "error response: working for" + str(device) #for tests only
-                return self.status.error(status="error", msg="bad request for" + str(device) + str(r.status.code))
+        #Can be generalized by specifying a fleet + for loop, instead of device
+        #Now chosen as such to avoid piling up any msg here before sending to multi_arch_client
+        #Not tested on performance/delay for large fleets
 
-            try:
-                #Save entire response message in dict
-                message_list[str(device)] = r.json()
-            except ValueError: #error msg
-                return self.status.error(status="error", msg="data cannot be JSON decoded")
+        #Create request url and request object
+        url = 'http://' + str(device) + '.local:' + str(self.port) + '/device' + endpoint
+        r = requests.get(url)
+        if r.status_code != 200:
+            self.status.msg["status"] = "error"
+            self.status.msg["message"] = "Bad request for " + str(device) + "with error code " + str(r.status_code)
+            self.status.msg["data"] = {}
+            error = "Bad request for " + str(device)
+            return error
 
-        #Only if without error, return list
-        return message_list
+        try:
+            #Save reponse
+            response = r.json()
+            return response
+        except ValueError: #error msg
+            self.status.msg["status"] = "error"
+            self.status.msg["message"] = "Data cannot be JSON decoded for " + str(device)
+            self.status.msg["data"] = {}
+            error = "Data cannot be JSON decoded for " + str(device)
+            return error
 
 
     def http_post_request(self, endpoint=None):

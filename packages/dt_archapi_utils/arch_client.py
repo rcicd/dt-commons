@@ -175,7 +175,7 @@ class ArchAPIClient:
 
         except FileNotFoundError: #error msg
             self.status.msg["status"] = "error"
-            self.status.msg["message"] = "Module file not found in " + self.module_path + file + ".yaml"
+            self.status.msg["message"] = "Module file not found in " + self.module_path + module + ".yaml"
             self.status.msg["data"] = {}
             return {}
             #return self.status.error(status="error", msg="Module not found", data=self.module_path + module + ".yaml")
