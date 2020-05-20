@@ -119,7 +119,7 @@ class MultiArchAPIClient:
         print(fleet)
         fleet_name = self.cl_fleet.fleet
         print("fleet name is")
-        print(str(fleet))
+        print(str(fleet_name))
         self.work = MultiApiWorker(fleet=fleet, port=self.port)
 
         #Initialize with main response
@@ -127,9 +127,8 @@ class MultiArchAPIClient:
         print(main_set_config)
         if main_set_config != "busy":
             #Create list
-            self.id_list[str(fleet_name)] = {}
+            self.id_list[str(fleet_name)] = main_set_config
             print(self.id_list)
-            self.id_list[str(fleet_name)]["ETag"] = main_set_config["job_id"]
             self.id_list[str(fleet_name)]["data"] = {}
             #Include messages from fleet
             for name in fleet:
@@ -151,7 +150,7 @@ class MultiArchAPIClient:
         #Is there a process going on?
         if str(fleet_name) in self.id_list:
             #Check if id is a match with main device
-            if self.id_list[str(fleet_name)]["ETag"] == id:
+            if self.id_list[str(fleet_name)]['job_id'] == id:
                 #Create list
                 monitor_list = monitor_id
                 monitor_list["data"] = {}
@@ -177,7 +176,6 @@ class MultiArchAPIClient:
         fleet = self.cl_fleet.clean_list(fleet)
         fleet_name = self.cl_fleet.fleet
         self.work = MultiApiWorker(fleet=fleet, port=self.port)
-
 
         #Initialize with main response
         try:
