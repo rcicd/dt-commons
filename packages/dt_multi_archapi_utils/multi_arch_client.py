@@ -125,16 +125,21 @@ class MultiArchAPIClient:
         #Initialize with main response
         main_set_config = self.main_api.configuration_set_config(config)
         print(main_set_config)
+        #Check if main device is busy
         if main_set_config != "busy":
+            #Check if fleet device is busy
+            #if "busy" in monitor_list:
+            #    return self.id_list
+
             #Create list
-            self.id_list[str(fleet_name)] = {}
-            self.id_list[str(fleet_name)] = main_set_config
+            #self.id_list[fleet_name] = {}
+            self.id_list[fleet_name] = main_set_config
             print(self.id_list)
-            self.id_list[str(fleet_name)]["data"] = {}
+            self.id_list[fleet_name]["data"] = {}
             #Include messages from fleet
             for name in fleet:
-                self.id_list[str(fleet_name)]["data"][name] = self.work.http_get_request(device=name, endpoint='/configuration/set/' + config)
-            return self.id_list[str(fleet_name)]
+                self.id_list[fleet_name]["data"][name] = self.work.http_get_request(device=name, endpoint='/configuration/set/' + config)
+            return self.id_list[fleet_name]
         else: #busy
             return main_set_config
 
@@ -147,16 +152,18 @@ class MultiArchAPIClient:
 
         #Initialize with main response
         monitor_id = self.main_api.monitor_id(id)
+        print(monitor_id)
 
         #Is there a process going on?
-        if str(fleet_name) in self.id_list:
-            #Check if id is a match with main device
-            if self.id_list[str(fleet_name)]['job_id'] == id:
+        if fleet_name in self.id_list:
+            #Check if id is a match with most recent process on main device
+            if self.id_list[fleet_name]['job_id'] == id:
                 #Create list
                 monitor_list = monitor_id
                 monitor_list["data"] = {}
+                print(monitor_list)
                 #Include messages from fleet
-                id_list = self.id_list[str(fleet_name)]["data"]
+                id_list = self.id_list[fleet_name]["data"]
                 for name in fleet:
                     monitor_list["data"][name] = self.work.http_get_request(device=name, endpoint='/monitor/' + str(id_list[name]["job_id"]))
                 return monitor_list
