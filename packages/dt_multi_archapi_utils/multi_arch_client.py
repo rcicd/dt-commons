@@ -115,9 +115,11 @@ class MultiArchAPIClient:
     def configuration_set_config(self, config, fleet):
         #Initialize worker with fleet and port
         fleet = self.cl_fleet.clean_list(fleet)
-        print("fleet is" + fleet)
+        print("fleet is")
+        print(fleet)
         fleet_name = self.cl_fleet.fleet
-        print("fleet name is" + fleet)
+        print("fleet name is")
+        print(str(fleet))
         self.work = MultiApiWorker(fleet=fleet, port=self.port)
 
         #Initialize with main response
@@ -126,7 +128,6 @@ class MultiArchAPIClient:
         if main_set_config != "busy":
             #Create list
             self.id_list[str(fleet_name)] = {}
-            print(main_set_config)
             print(self.id_list)
             self.id_list[str(fleet_name)]["ETag"] = main_set_config["job_id"]
             self.id_list[str(fleet_name)]["data"] = {}
