@@ -86,7 +86,7 @@ class MultiArchAPIClient:
             return {}
         else:
             try:
-                with open(self.config_path + "/" + config + ".yaml", 'r') as file: "/data/assets/dt-architecture-data/configurations/town/"
+                with open(self.config_path + "/" + config + ".yaml", 'r') as file: #"/data/assets/dt-architecture-data/configurations/town/"
                     device_info = yaml.load(file, Loader=yaml.FullLoader)
                     #print(device_info)
                     #print("devices" in device_info)

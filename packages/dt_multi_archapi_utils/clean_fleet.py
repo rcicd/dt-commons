@@ -20,7 +20,7 @@ class CleanFleet:
         self.status = ApiMessage()
         self.fleet = None
         self.dt_version = "ente"
-        self.fleet_path = "/data/assets/dt-architecture-data/lists/"
+        self.fleet_path = "/data/assets/dt-architecture-data/lists/" #change to data/config/fleets/...
 
 
     def clean_list(self, fleet=None):
@@ -31,8 +31,6 @@ class CleanFleet:
         if fleet is None:
             print("No fleet specified, please specify to avoid errors... using default file")
             self.fleet = "default-device-list"
-            #redundant? - might not accept the endpoint anyway
-            #return self.status.error(status="error", msg="No fleet was specified, use /fleet/.../<fleet>")
 
         #For testing & development only
         try:
