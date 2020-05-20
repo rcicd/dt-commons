@@ -152,27 +152,33 @@ class MultiArchAPIClient:
 
         #Initialize with main response
         monitor_id = self.main_api.monitor_id(id)
+        print("monitor_id is")
         print(monitor_id)
 
         #Is there a process going on?
         if fleet_name in self.id_list:
             #Check if id is a match with most recent process on main device
-            if self.id_list[fleet_name]['job_id'] == id:
+            if int(self.id_list[fleet_name]['job_id']) == int(id):
+                print("creating monitor_list")
                 #Create list
                 monitor_list = monitor_id
                 monitor_list["data"] = {}
                 print(monitor_list)
                 #Include messages from fleet
                 id_list = self.id_list[fleet_name]["data"]
+                print("id_list")
+                print(id_list)
                 for name in fleet:
                     monitor_list["data"][name] = self.work.http_get_request(device=name, endpoint='/monitor/' + str(id_list[name]["job_id"]))
                 return monitor_list
             else: #false id
+                print("false id")
                 self.status.msg["status"] = "error"
                 self.status.msg["message"] = "The specified id does not match most recent process for fleet " + fleet_name
                 self.status.msg["data"] = {}
                 return {}
         else: #no process
+            print("no process")
             self.status.msg["status"] = "error"
             self.status.msg["message"] = "There is no process for fleet " + fleet_name
             self.status.msg["data"] = {}
