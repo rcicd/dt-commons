@@ -114,6 +114,7 @@ class MultiArchAPIClient:
 
     def configuration_set_config(self, config, fleet):
         #Initialize worker with fleet and port
+        fleet_name = fleet
         fleet = self.cl_fleet.clean_list(fleet)
         self.work = MultiApiWorker(fleet=fleet, port=self.port)
 
@@ -121,63 +122,65 @@ class MultiArchAPIClient:
         main_set_config = self.main_api.configuration_set_config(config)
         if main_set_config != "busy":
             #Create list
-            self.id_list[str(fleet)] = {}
-            self.id_list[str(fleet)]["ETag"] = main_set_config["job id"]
-            self.id_list[str(fleet)]["data"] = {}
+            self.id_list[str(fleet_name)] = {}
+            self.id_list[str(fleet_name)]["ETag"] = main_set_config["job id"]
+            self.id_list[str(fleet_name)]["data"] = {}
             #Include messages from fleet
             for name in fleet:
-                self.id_list[str(fleet)]["data"][name] = self.work.http_get_request(device=name, endpoint='/configuration/set/' + config)
-            return self.id_list[str(fleet)]
+                self.id_list[str(fleet_name)]["data"][name] = self.work.http_get_request(device=name, endpoint='/configuration/set/' + config)
+            return self.id_list[str(fleet_name)]
         else: #busy
             return main_set_config
 
 
     def monitor_id(self, id, fleet):
         #Initialize worker with fleet and port
+        fleet_name = fleet
         fleet = self.cl_fleet.clean_list(fleet)
         self.work = MultiApiWorker(fleet=fleet, port=self.port)
 
         #Initialize with main response
-        monitor_id = self.main_api.monitor(id)
+        monitor_id = self.main_api.monitor_id(id)
 
         #Is there a process going on?
-        if str(fleet) in self.id_list:
+        if str(fleet_name) in self.id_list:
             #Check if id is a match with main device
-            if self.id_list[str(fleet)]["ETag"] == id:
+            if self.id_list[str(fleet_name)]["ETag"] == id:
                 #Create list
                 monitor_list = monitor_id
                 monitor_list["data"] = {}
                 #Include messages from fleet
-                id_list = self.id_list[str(fleet)]["data"]
+                id_list = self.id_list[str(fleet_name)]["data"]
                 for name in fleet:
                     monitor_list["data"][name] = self.work.http_get_request(device=name, endpoint='/monitor/' + str(id_list[name]["job id"]))
                 return monitor_list
             else: #false id
                 self.status.msg["status"] = "error"
-                self.status.msg["message"] = "The specified id does not match most recent process for fleet " + fleet
+                self.status.msg["message"] = "The specified id does not match most recent process for fleet " + fleet_name
                 self.status.msg["data"] = {}
                 return {}
         else: #no process
             self.status.msg["status"] = "error"
-            self.status.msg["message"] = "There is no process for fleet " + fleet
+            self.status.msg["message"] = "There is no process for fleet " + fleet_name
             self.status.msg["data"] = {}
             return {}
 
 
     def info_fleet(self, fleet):
         #Initialize worker with fleet and port
+        fleet_name = fleet
         fleet = self.cl_fleet.clean_list(fleet)
         self.work = MultiApiWorker(fleet=fleet, port=self.port)
 
         #Initialize with main response
         try:
-            with open("/data/assets/dt-architecture-data/configurations/lists/" + fleet + ".yaml", 'r') as file: #replace with data/config/fleets/...
+            with open(self.cl_fleet.fleet_path + fleet_name + ".yaml", 'r') as file: #replace with data/config/fleets/...
                 info_fleet = yaml.load(file, Loader=yaml.FullLoader)
                 return info_fleet
 
         except FileNotFoundError: #error msg
             self.status.msg["status"] = "error"
-            self.status.msg["message"] = "Fleet file not found in /data/assets/.../lists/" + fleet + ".yaml" #replace with data/config/fleets/...
+            self.status.msg["message"] = "Fleet file not found in /data/assets/.../lists/" + fleet_name + ".yaml" #replace with data/config/fleets/...
             self.status.msg["data"] = {}
             return {}
 
