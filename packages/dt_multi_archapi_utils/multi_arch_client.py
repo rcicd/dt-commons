@@ -127,6 +127,7 @@ class MultiArchAPIClient:
         print(main_set_config)
         if main_set_config != "busy":
             #Create list
+            self.id_list[str(fleet_name)] = {}
             self.id_list[str(fleet_name)] = main_set_config
             print(self.id_list)
             self.id_list[str(fleet_name)]["data"] = {}
@@ -157,7 +158,7 @@ class MultiArchAPIClient:
                 #Include messages from fleet
                 id_list = self.id_list[str(fleet_name)]["data"]
                 for name in fleet:
-                    monitor_list["data"][name] = self.work.http_get_request(device=name, endpoint='/monitor/' + str(id_list[name]["job id"]))
+                    monitor_list["data"][name] = self.work.http_get_request(device=name, endpoint='/monitor/' + str(id_list[name]["job_id"]))
                 return monitor_list
             else: #false id
                 self.status.msg["status"] = "error"

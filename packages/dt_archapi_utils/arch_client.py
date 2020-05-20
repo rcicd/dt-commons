@@ -185,7 +185,7 @@ class ArchAPIClient:
     def configuration_set_config(self, config):
         #Get virtually extended config file with module specs
         mod_config = self.configuration_info(config)
-        return str(self.work.set_config(mod_config))
+        return self.work.set_config(mod_config) #removed str
 
 
     def pull_image(self, url):
