@@ -169,6 +169,8 @@ class MultiArchAPIClient:
                 print("id_list")
                 print(id_list)
                 for name in fleet:
+                    print("inside for loop")
+                    print(id_list[name]["job_id"])
                     monitor_list["data"][name] = self.work.http_get_request(device=name, endpoint='/monitor/' + str(id_list[name]["job_id"]))
                 return monitor_list
             else: #false id
