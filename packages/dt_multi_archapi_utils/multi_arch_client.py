@@ -51,7 +51,7 @@ class MultiArchAPIClient:
         self.main_api = ArchAPIClient(hostname=self.main_name, robot_type=self.robot_type, client=self.client)
         self.config_path = self.main_api.config_path
         self.module_path = self.main_api.module_path
-        self.id_list = {} #store process log - replace with multiprocessing.Manager()?
+        self.id_list = dict() #store process log - replace with multiprocessing.Manager()?
 
 
     #RESPONSE MESSAGES: extended with device info from fleet file
@@ -114,15 +114,17 @@ class MultiArchAPIClient:
 
     def configuration_set_config(self, config, fleet):
         #Initialize worker with fleet and port
-        fleet_name = fleet
         fleet = self.cl_fleet.clean_list(fleet)
+        fleet_name = self.cl_fleet.fleet
         self.work = MultiApiWorker(fleet=fleet, port=self.port)
 
         #Initialize with main response
         main_set_config = self.main_api.configuration_set_config(config)
+        print(main_set_config)
         if main_set_config != "busy":
             #Create list
             self.id_list[str(fleet_name)] = {}
+            print(main_set_config)
             self.id_list[str(fleet_name)]["ETag"] = main_set_config["job id"]
             self.id_list[str(fleet_name)]["data"] = {}
             #Include messages from fleet
@@ -135,8 +137,8 @@ class MultiArchAPIClient:
 
     def monitor_id(self, id, fleet):
         #Initialize worker with fleet and port
-        fleet_name = fleet
         fleet = self.cl_fleet.clean_list(fleet)
+        fleet_name = self.cl_fleet.fleet
         self.work = MultiApiWorker(fleet=fleet, port=self.port)
 
         #Initialize with main response
@@ -168,9 +170,10 @@ class MultiArchAPIClient:
 
     def info_fleet(self, fleet):
         #Initialize worker with fleet and port
-        fleet_name = fleet
         fleet = self.cl_fleet.clean_list(fleet)
+        fleet_name = self.cl_fleet.fleet
         self.work = MultiApiWorker(fleet=fleet, port=self.port)
+
 
         #Initialize with main response
         try:
