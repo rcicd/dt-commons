@@ -115,7 +115,9 @@ class MultiArchAPIClient:
     def configuration_set_config(self, config, fleet):
         #Initialize worker with fleet and port
         fleet = self.cl_fleet.clean_list(fleet)
+        print("fleet is" + fleet)
         fleet_name = self.cl_fleet.fleet
+        print("fleet name is" + fleet)
         self.work = MultiApiWorker(fleet=fleet, port=self.port)
 
         #Initialize with main response
@@ -125,7 +127,8 @@ class MultiArchAPIClient:
             #Create list
             self.id_list[str(fleet_name)] = {}
             print(main_set_config)
-            self.id_list[str(fleet_name)]["ETag"] = main_set_config["job id"]
+            print(self.id_list)
+            self.id_list[str(fleet_name)]["ETag"] = main_set_config["job_id"]
             self.id_list[str(fleet_name)]["data"] = {}
             #Include messages from fleet
             for name in fleet:

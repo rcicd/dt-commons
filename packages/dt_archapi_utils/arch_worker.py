@@ -33,7 +33,7 @@ class ApiWorker:
             #Start self.process on this object
             self.process.start()
             #Pass process id as soon as started for monitoring
-            status_id = {"job id": self.process.pid}
+            status_id = {"job_id": self.process.pid}
             return status_id
         else:
             #Still in another process
