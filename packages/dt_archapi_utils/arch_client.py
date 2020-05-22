@@ -116,7 +116,6 @@ class ArchAPIClient:
             self.status.msg["message"] = "Configuration file not found in " + self.config_path + "/" + config + ".yaml"
             self.status.msg["data"] = {}
             return {}
-            #return self.status.error(status="error", msg="Configuration file not found", data=self.config_path + "/" + config + ".yaml")
 
 
     def module_list(self):

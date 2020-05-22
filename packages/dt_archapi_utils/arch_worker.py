@@ -27,48 +27,64 @@ class ApiWorker:
 
 
     def clearance(self):
+        gtgo = dict()
         if self.process is None or not self.process.is_alive():
-            gtgo = "ok"
+            gtgo["status"] = "ready"
+            gtgo["job_id"] = ""
             return gtgo
         else:
-            gtgo = "busy"
+            gtgo["status"] = "busy"
+            gtgo["job_id"] = self.process.pid #current pid
             return gtgo
 
 
     def set_config(self, mod_config):
+        gtgo = dict()
         if self.process is None or not self.process.is_alive():
             #Initialize process of stopping and launching correct modules
             self.process = Process(target=self.set_config_proc, args=(mod_config, self.log,))
             #Start self.process on this object
             self.process.start()
             #Pass process id as soon as started for monitoring
-            status_id = {"job_id": self.process.pid}
-            return status_id
+            gtgo["status"] = "starting"
+            gtgo["job_id"] = self.process.pid #new pid
+            return gtgo
         else:
             #Still in another process
             #Perhaps an idea to overrule the current process? Overcomplicating?
-            return "busy"
+            gtgo["status"] = "busy"
+            gtgo["job_id"] = self.process.pid #current pid
+            return gtgo
 
 
     def pull_image(self, image_url):
+        gtgo = dict()
         if self.process is None or not self.process.is_alive():
             self.process = Process(target=self.pull_image_proc, args=(image_url, self.log,))
             self.process.start()
-            return {"job id": self.process.pid}
+            gtgo["status"] = "starting"
+            gtgo["job_id"] = self.process.pid #new pid
+            return gtgo
         else:
             #Still in another process
-            return "busy"
+            gtgo["status"] = "busy"
+            gtgo["job_id"] = self.process.pid #current pid
+            return gtgo
 
 
     def stop_containers(self):
+        gtgo = dict()
         if self.process is None or not self.process.is_alive():
             self.process = Process(target=self.stop_containers_proc, args=(self.log,))
             self.process.start()
-            status_id = {"jobid": self.process.pid}
-            return status_id
+            gtgo["status"] = "starting"
+            gtgo["job_id"] = self.process.pid #new pid
+            return gtgo
         else:
             #Still in another process
-            return "busy"
+            gtgo["status"] = "busy"
+            gtgo["job_id"] = self.process.pid #current pid
+            return gtgo
 
 
     def clear_log(self):

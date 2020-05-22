@@ -23,8 +23,8 @@ from dt_archapi_utils.arch_message import ApiMessage
     THIS LIB INCLUDES FUNCTIONS THAT ALLOW TO COMMUNICATE WITH AN EXTENDED
     ARCHITECTURE API RUNNING ON A SINGLE (PRIVILEGED) ROBOT AND ALLOW TO CONTROL
     A SO CALLED FLEET THROUGH THIS ROBOT BY PASSING A SINGLE HTTP COMMAND. NOTE
-    THAT THIS LIB DOES NOT SPECIFY THE REQUIRED API FOR THAT. I.E. THE
-    REQUIRED SERVER IS NOT RUNNING WITHIN THE LIBRARY
+    THAT THIS LIB DOES NOT SPECIFY THE REQUIRED API, I.E. THE REQUIRED SERVER IS
+    NOT RUNNING WITHIN THE LIBRARY.
 '''
 
 class MultiArchAPIClient:
@@ -75,6 +75,62 @@ class MultiArchAPIClient:
                 def_response_list["data"][name] = self.work.http_get_request(device=name, endpoint='/')
             return def_response_list
 
+    """
+    def configuration_list(self, fleet):
+        #Initialize worker with fleet and port
+        fleet = self.cl_fleet.clean_list(fleet)
+        self.work = MultiApiWorker(fleet=fleet, port=self.port)
+        fleet_scan = self.scan.device_list
+
+        #available robot_types in current fleet
+        type_list = []
+        for name in fleet:
+            if name in fleet_scan["duckiebot"]:
+                if "duckiebot" not in type_list:
+                    type_list = type_list.append("duckiebot")
+            if name in fleet_scan["watchtower"]:
+                if "watchtower" not in type_list:
+                    type_list = type_list.append("watchtower")
+            if name in fleet_scan["greenstation"]:
+                if "greenstation" not in type_list:
+                    type_list = type_list.append("greenstation")
+            if name in fleet_scan["duckiedrone"]:
+                if "duckiedrone" not in type_list:
+                    type_list = type_list.append("duckiedrone")
+            if name in fleet_scan["town"]:
+                if "town" not in type_list:
+                    type_list = type_list.append("town")
+
+        #check which configurations are possible for the present robot_types
+        config_list = {}
+        if self.config_path is not None:
+            config_paths = glob.glob(self.config_path + "/*.yaml")
+            config_list["configurations"] = [os.path.splitext(os.path.basename(f))[0] for f in config_paths]
+            #open all and check device requirements
+            for config in config_list["configurations"]:
+                try:
+                    with open(self.config_path + "/" + config + ".yaml", 'r') as file:
+                        config_info = yaml.load(file, Loader=yaml.FullLoader)
+                        if "devices" in config_info:
+                            for type in config_info["devices"]:
+                                if type not in type_list:
+                                    #as soon as type is not present in fleet, remove configuration possiblity
+                                    del config_list["configurations"][config]
+
+                except FileNotFoundError: #error msg
+                    self.status.msg["status"] = "error"
+                    self.status.msg["message"] = "Configuration file not found in " + self.config_path + "/" + config + ".yaml"
+                    self.status.msg["data"] = {}
+                    return {}
+        else: #error msg
+            self.status.msg["status"] = "error"
+            self.status.msg["message"] = "could not find configurations for " + self.robot_type + " in dt-architecture-data"
+            self.status.msg["data"] = {}
+            return {}
+
+        #only list possible configurations for the robot_types in fleet
+        return config_list
+    """
 
     def configuration_info(self, config, fleet):
         #Initialize worker with fleet and port
@@ -98,6 +154,7 @@ class MultiArchAPIClient:
                                 c_name = device_info["devices"][device]["configuration"] #save config name
                                 if c_name is not {}:
                                     device_info["devices"][device]["configuration"] = {} #initialize for config info
+                                    #dt-architecture-data configurations depend on robot_type
                                     new_robot_type_as_device = ArchAPIClient(robot_type=device)
                                     device_info["devices"][device]["configuration"][c_name] = {}
                                     device_info["devices"][device]["configuration"][c_name] = new_robot_type_as_device.configuration_info(config=c_name)
@@ -122,11 +179,12 @@ class MultiArchAPIClient:
 
         #Check if there is any busy process in the fleet
         cl_list = self.clearance(fleet)
+        nogo = {}
         for name in fleet:
-            if cl_list[name] == "busy":
-                nogo = {}
-                nogo[name] = " in fleet is still busy, wait for process to end and try again"
-                return nogo
+            if cl_list[name]["status"] == "busy":
+                nogo[name] = cl_list[name]
+        if nogo != {}:
+            return nogo
 
         #Initialize with main response
         main_set_config = self.main_api.configuration_set_config(config)
@@ -188,7 +246,6 @@ class MultiArchAPIClient:
             with open(self.cl_fleet.fleet_path + fleet_name + ".yaml", 'r') as file: #replace with data/config/fleets/...
                 info_fleet = yaml.load(file, Loader=yaml.FullLoader)
                 return info_fleet
-
         except FileNotFoundError: #error msg
             self.status.msg["status"] = "error"
             self.status.msg["message"] = "Fleet file not found in /data/assets/.../lists/" + fleet_name + ".yaml" #replace with data/config/fleets/...
@@ -196,13 +253,14 @@ class MultiArchAPIClient:
             return {}
 
 
-    def fleet_scan(self):
-        FleetScanner(service_in_callback=cb)
-        #don't use a fleet, just return all available devices on the network,
-        #as a function that can be used by calling the architecture API
-        self.available_devices = {}
-        self.available_devices["available devices"], self.appear_msgs = self.scan.listen_to_network()
-        return self.available_devices
+    #def fleet_scan(self):
+    #    return self.scan.device_list #see configuration_info as well for use!
+    #    FleetScanner(service_in_callback=cb)
+    #    #don't use a fleet, just return all available devices on the network,
+    #    #as a function that can be used by calling the architecture API
+    #    self.available_devices = {}
+    #    self.available_devices["available devices"], self.appear_msgs = self.scan.listen_to_network()
+    #    return self.available_devices
 
 
     def clearance_list(self, cl_fleet):
@@ -283,11 +341,7 @@ class MultiArchAPIClient:
                     self.status.msg["data"] = {}
                     return {}
 
-"""
 
-
-
-"""
     def configuration_list(self, fleet=None):
         #Initialize worker with fleet and port
         fleet = self.cl_fleet.clean_list(fleet)
@@ -305,154 +359,4 @@ class MultiArchAPIClient:
             self.status["message"].append("could not find configurations (dt-docker-data)")
             return self.status
         return config_list
-"""
-
-
-
-
-"""
-    def configuration_info(self, config):
-        #Include config info on fleet (per device)
-        self.c_info_1 = self.town_api.configuration_info(config)
-        self.configuration_info = "appended self.c_info_1 with fleet info"
-        return self.configuration_info
-
-    #Active messaging
-    def configuration_set_config(self, config):
-        #Launch town modules
-        self.c_set_config = self.town_api.configuration_set_config(config)
-
-        #Launch configuration requests for devices in fleet
-        for "devices" in config:
-            do something
-            self.send_request #send request
-
-        self.configuration_set_config = "appended launching town modules with sending out a GET HTTP request for device configurations"
-        return self.c_set_config
-
-
-
-    #FLEET CONFIGURATION
-    def send_request(self, fleet):
-        FLEET
-
-    def get_url_list(self, endpoint):
-        self.url = ".local" + self.port + "/"
-        self.url_list = []
-        for i in [0, len(self.fleet)-1]:
-            self.url_list(i) = str(self.fleet(i)) + self.url
-
-
-    def request_list(self, endpoint, gp='GET'):
-        #Send HTTP requests to every device in fleet list
-        if gp == 'POST':
-            #POST type request to submit data to server
-            do something
-        else:
-            #GET type request to request data from server
-            self.url_list = self.get_url_list(endpoint)
-            self.requests = []
-            self.messages = []
-
-            for i in [0, len(self.fleet)-1]:
-                self.requests(i) = requests.get(url = self.url_list(i))
-                self.messages(i) = self.requests(i).json()
-"""
-
-
-
-
-
-'''
-    def pull_image(self, url):
-        return self.town_api.pull_image(url)
-
-    def monitor_id(self, id):
-        return self.town_api.monitor_id(id)
-
-    def clear_job_log(self):
-        return self.town_api.clear_job_log
-'''
-
-
-'''
-        #Give every device in fleet an ArchAPIClient
-        for i in [0, len(self.fleet)-1]:
-            self.multi_api = []
-            self.multi_api(i) = self.api(self.fleet(i), self.client)
-'''
-
-
-"""
-#ENDPOINTS FOR TOWNAPI:
-    #HTTP REQUEST: townXX.local:8083/architecture/<something>/<else>
-    #PASS REQUEST: split into all necessary arch configs
-    #This library does not take care about individual messages between town and
-    #user. As this is the task of the Architecture API running on the town.
-
-    #Make list of desired HTTP cmds to send out
-    def request_list(self): #also possible to specify fleet here?
-        return self.listmaker
-
-    def read_data(self):
-        self.api.config_path
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#AUXILIARY FUNCTIONS:
-    def get_robot_list(self):
-        #list ALL robots from .yaml filename by default
-        #if no http request can be sent, show error message, or don't care
-        #make .yaml file for Autolab only (for now)
-        if 'incoming' is 'empty':
-            return self.robot = np.array(["from_yaml_file"])
-        else:
-            return self.robot = np.array(["the incoming robots"])
-
-    def get_robot_type_list(self):
-        for i in [0, self.robot_type_count]:
-            if self.robot_type == 'duckiebot':
-                return 'list of all possible configurations'
-            elif self.robot_type == 'watchtower':
-                return 'list of all possible configurations'
-            elif self.robot_type == 'duckiedrone':
-                return 'list of all possible configurations'
-
-    def get_robot_count(self):
-        self.robot_count = len(self.robot)
-
-    def archAPIClient(self):
-        self.docker_client.configs = 'something'
-
-        #specify the required input for the ArchAPIClient class
-        self.robot = ArchAPIClient(self.robot) #"duckiebot23"
-
-        #call desired msgs
-        self.status = robot.configuration.status()
-        self.list = robot.configuration.list()
-        self.info = "default message, hardcoded, get from somewhere (dt-arch-data??)"
-
-
-
-        '''
-        if fleet is None:
-            self.fleet = self.list.list #"//read from default .yaml file//" #array type!
-        else:
-            self.fleet = fleet #custom fleet as list/array
-        '''
 """
