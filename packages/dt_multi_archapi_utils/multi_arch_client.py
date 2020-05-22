@@ -9,9 +9,11 @@ import glob
 import requests
 import json
 
+from zeroconf import ServiceBrowser, Zeroconf
+
 from .multi_arch_worker import MultiApiWorker
 from .clean_fleet import CleanFleet
-#from .scanner import FleetScanner
+#from .listener import FleetScanner
 
 #Import from another folder within dt-commons (no base image)
 from dt_archapi_utils.arch_client import ArchAPIClient
@@ -118,62 +120,24 @@ class MultiArchAPIClient:
         fleet_name = self.cl_fleet.fleet
         self.work = MultiApiWorker(fleet=fleet, port=self.port)
 
-        ########################################################################################################
-        #All processes on this device have been stored in self.id_list
-        if self.id_list != {}:
-            #First go through all main device information
-            for any_fleet_so_far in self.id_list:
-                #Check if main device has process running - avoid expensive status loop for fleet devices
-                if self.id_list[any_fleet_so_far] != "busy": #should never happen here
-                    if self.id_list[any_fleet_so_far]["status"] in {"pending", "processing", "error"}:
-                        busy_id = self.id_list[any_fleet_so_far]['job_id']
-                        self.status.msg["status"] = "error"
-                        self.status.msg["message"] = "Cannot set " + config + " while" + self.main_name + " has a process going on - use device/monitor/" + busy_id
-                        self.status.msg["data"] = {}
-                        return "busy"
-                else: #should never happen, as you don't ask it to start a new process
-                    self.status.msg["status"] = "error"
-                    self.status.msg["message"] = "Cannot set " + config + " while" + self.main_name " is busy"
-                    self.status.msg["data"] = {}
-                    return "busy"
-                #note, do not name two different fleets with the same name!
-                #should give error from Dashboard
-
-            #Only now, when main not busy, go through all fleet information belonging to this device
-            for any_fleet_so_far in self.id_list:
-                #Was device in fleet part of any previous fleet or process?
-                for name in fleet:
-                    if name in self.id_list[any_fleet_so_far]["data"]:
-                        if self.id_list[any_fleet_so_far]["data"][name] != "busy": #should never happen here
-                            if self.id_list[any_fleet_so_far]["data"][name]["status"] in {"pending", "processing", "error"}:
-                                busy_id = self.id_list[any_fleet_so_far]["data"][name]['job_id']
-                                self.status.msg["status"] = "error"
-                                self.status.msg["message"] = "Cannot set " + config + " while" + name + " in fleet has a process going on - use fleet/monitor/" + busy_id +"/" + fleet_name
-                                self.status.msg["data"] = {}
-                                return "busy"
-                        else: #should never happen, as you don't ask it to start a new process
-                            self.status.msg["status"] = "error"
-                            self.status.msg["message"] = "Cannot set " + config + " while" + name " in fleet is busy"
-                            self.status.msg["data"] = {}
-                            return "busy"
-        ########################################################################################################
+        #Check if there is any busy process in the fleet
+        cl_list = self.clearance(fleet)
+        for name in fleet:
+            if cl_list[name] == "busy":
+                nogo = {}
+                nogo[name] = " in fleet is still busy, wait for process to end and try again"
+                return nogo
 
         #Initialize with main response
         main_set_config = self.main_api.configuration_set_config(config)
-        print(main_set_config)
-
-        #Only proceed with fleet deployment if main is not busy
-        if main_set_config != "busy":
-            #Create list
-            self.id_list[fleet_name] = main_set_config
-            print(self.id_list)
-            self.id_list[fleet_name]["data"] = {}
-            #Include messages from fleet
-            for name in fleet:
-                self.id_list[fleet_name]["data"][name] = self.work.http_get_request(device=name, endpoint='/configuration/set/' + config)
-            return self.id_list[fleet_name]
-        else: #busy
-            return main_set_config
+        #Create list
+        self.id_list[fleet_name] = main_set_config
+        print(self.id_list)
+        self.id_list[fleet_name]["data"] = {}
+        #Include messages from fleet
+        for name in fleet:
+            self.id_list[fleet_name]["data"][name] = self.work.http_get_request(device=name, endpoint='/configuration/set/' + config)
+        return self.id_list[fleet_name]
 
 
     def monitor_id(self, id, fleet):
@@ -232,13 +196,69 @@ class MultiArchAPIClient:
             return {}
 
 
-"""
     def fleet_scan(self):
+        FleetScanner(service_in_callback=cb)
         #don't use a fleet, just return all available devices on the network,
         #as a function that can be used by calling the architecture API
         self.available_devices = {}
         self.available_devices["available devices"], self.appear_msgs = self.scan.listen_to_network()
         return self.available_devices
+
+
+    def clearance_list(self, cl_fleet):
+        #Note: this already takes in a clean fleet list
+        #Initialize with main response
+        cl_list = {}
+        cl_list[self.main_name] = self.main_api.clearance()
+
+        #Proceed with fleet devices
+        for name in cl_fleet:
+            cl_list[name] = self.work.http_get_request(device=name, endpoint='/clearance')
+        return cl_list
+
+
+
+"""
+    def something(self):
+                ########################################################################################################
+                #All processes on this device have been stored in self.id_list
+                if self.id_list != {}:
+                    #First go through all main device information
+                    for any_fleet_so_far in self.id_list:
+                        #Check if main device has process running - avoid expensive status loop for fleet devices
+                        if self.id_list[any_fleet_so_far] != "busy": #should never happen here
+                            if self.id_list[any_fleet_so_far]["status"] in {"pending", "processing", "error"}:
+                                busy_id = self.id_list[any_fleet_so_far]['job_id']
+                                self.status.msg["status"] = "error"
+                                self.status.msg["message"] = "Cannot set " + config + " while" + self.main_name + " has a process going on - use device/monitor/" + busy_id
+                                self.status.msg["data"] = {}
+                                return "busy"
+                        else: #should never happen, as you don't ask it to start a new process
+                            self.status.msg["status"] = "error"
+                            self.status.msg["message"] = "Cannot set " + config + " while" + self.main_name " is busy"
+                            self.status.msg["data"] = {}
+                            return "busy"
+                        #note, do not name two different fleets with the same name!
+                        #should give error from Dashboard
+
+                    #Only now, when main not busy, go through all fleet information belonging to this device
+                    for any_fleet_so_far in self.id_list:
+                        #Was device in fleet part of any previous fleet or process?
+                        for name in fleet:
+                            if name in self.id_list[any_fleet_so_far]["data"]:
+                                if self.id_list[any_fleet_so_far]["data"][name] != "busy": #should never happen here
+                                    if self.id_list[any_fleet_so_far]["data"][name]["status"] in {"pending", "processing", "error"}:
+                                        busy_id = self.id_list[any_fleet_so_far]["data"][name]['job_id']
+                                        self.status.msg["status"] = "error"
+                                        self.status.msg["message"] = "Cannot set " + config + " while" + name + " in fleet has a process going on - use fleet/monitor/" + busy_id +"/" + fleet_name
+                                        self.status.msg["data"] = {}
+                                        return "busy"
+                                else: #should never happen, as you don't ask it to start a new process
+                                    self.status.msg["status"] = "error"
+                                    self.status.msg["message"] = "Cannot set " + config + " while" + name " in fleet is busy"
+                                    self.status.msg["data"] = {}
+                                    return "busy"
+                ########################################################################################################
 
     def fleet(self):
         #Check if any device is busy from last process where it was part of any fleet so far

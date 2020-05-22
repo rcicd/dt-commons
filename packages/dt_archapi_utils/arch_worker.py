@@ -26,6 +26,15 @@ class ApiWorker:
         self.process = None
 
 
+    def clearance(self):
+        if self.process is None or not self.process.is_alive():
+            gtgo = "ok"
+            return gtgo
+        else:
+            gtgo = "busy"
+            return gtgo
+
+
     def set_config(self, mod_config):
         if self.process is None or not self.process.is_alive():
             #Initialize process of stopping and launching correct modules

@@ -24,6 +24,7 @@ class ArchAPIClient:
         #Initialize robot hostname & docker.DockerClient()
         self.hostname = hostname
         self.client = client
+        self.name = os.environ['VEHICLE_NAME']
 
         #Initialize folders and directories
         self.active_config = None
@@ -43,7 +44,9 @@ class ArchAPIClient:
                 self.robot_type = open("/data/stats/init_sd_card/parameters/robot_type").readline()
             else: #error upon initialization = status
                 self.status.msg["status"] = "error"
-                self.status.msg["message"] = "could not find robot type in expected paths"
+                self.status.msg["message"] = "could not find robot_type in expected paths"
+                self.status.msg["data"] = {}
+                self.robot_type = ""
         else:
             self.robot_type = robot_type
 
@@ -73,9 +76,10 @@ class ArchAPIClient:
     def default_response(self):
         return self.status.msg
 
-    #def configuration_status(self):
-    #    self.configuration_status = json.dumps(self.status)
-    #    return self.configuration_status
+    def configuration_status(self):
+        #currently same as default_response
+        return self.status.msg
+
 
     def configuration_list(self):
         config_list = {} #re-initialize every time called for (empty when error)
@@ -84,7 +88,7 @@ class ArchAPIClient:
             config_list["configurations"] = [os.path.splitext(os.path.basename(f))[0] for f in config_paths]
         else: #error msg
             self.status.msg["status"] = "error"
-            self.status.msg["message"].append("could not find configurations (dt-docker-data)")
+            self.status.msg["message"] = "could not find configurations for " + self.robot_type + " in dt-architecture-data"
             self.status.msg["data"] = {}
             return {}
 
@@ -130,7 +134,7 @@ class ArchAPIClient:
 
             except FileNotFoundError: #error msg
                 self.status.msg["status"] = "error"
-                self.status.msg["message"] = "Module file not found in " + self.module_path + file + ".yaml"
+                self.status.msg["message"] = "Modules not found in " + self.module_path + file + ".yaml"
                 self.status.msg["data"] = {}
                 return {}
                 #return self.status.error(status="error", msg="Module file not found", data=self.module_path + "/" + file + ".yaml")
@@ -187,11 +191,9 @@ class ArchAPIClient:
         mod_config = self.configuration_info(config)
         return self.work.set_config(mod_config) #removed str
 
-
     def pull_image(self, url):
         #url of form {image_url}:{image_tag}
         return self.work.pull_image(url)
-
 
     def monitor_id(self, id):
         #Get current job status, using id=ETag
@@ -200,6 +202,8 @@ class ArchAPIClient:
         else:
             return self.work.log.copy()
 
-
     def clear_job_log(self):
         return self.work.clear_log()
+
+    def clearance(self):
+        return self.work.clearance()
