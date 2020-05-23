@@ -9,8 +9,6 @@ import glob
 import requests
 import json
 
-from zeroconf import ServiceBrowser, Zeroconf
-
 from .multi_arch_worker import MultiApiWorker
 from .clean_fleet import CleanFleet
 #from .listener import FleetScanner
