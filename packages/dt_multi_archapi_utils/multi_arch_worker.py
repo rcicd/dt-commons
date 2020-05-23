@@ -37,12 +37,12 @@ class MultiApiWorker:
         #Create request url and request object
         url = 'http://' + str(device) + '.local:' + str(self.port) + '/device' + endpoint
         r = requests.get(url)
-        if r.status_code != 200:
+        if int(r.status_code) != int(200):
             self.status.msg["status"] = "error"
             self.status.msg["message"] = "Bad request for " + str(device) + "with error code " + str(r.status_code)
             self.status.msg["data"] = {}
-            error = "Bad request for " + str(device)
-            return error
+            #error = "Bad request for " + str(device)
+            return self.status.msg
 
         try:
             #Save reponse
@@ -52,8 +52,8 @@ class MultiApiWorker:
             self.status.msg["status"] = "error"
             self.status.msg["message"] = "Data cannot be JSON decoded for " + str(device)
             self.status.msg["data"] = {}
-            error = "Data cannot be JSON decoded for " + str(device)
-            return error
+            #error = "Data cannot be JSON decoded for " + str(device)
+            return self.status.msg
 
 
     def http_post_request(self, endpoint=None):

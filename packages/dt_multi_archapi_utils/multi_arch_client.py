@@ -176,7 +176,7 @@ class MultiArchAPIClient:
         self.work = MultiApiWorker(fleet=fleet, port=self.port)
 
         #Check if there is any busy process in the fleet
-        cl_list = self.clearance(fleet)
+        cl_list = self.clearance_list(fleet)
         nogo = {}
         for name in fleet:
             if cl_list[name]["status"] == "busy":
