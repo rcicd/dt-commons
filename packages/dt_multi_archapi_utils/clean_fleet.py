@@ -29,8 +29,8 @@ class CleanFleet:
 
         #Warning
         if fleet is None:
-            print("No fleet specified, please specify to avoid errors... using default file")
-            self.fleet = "default-device-list"
+            print("No fleet specified, please specify to avoid errors... using test file")
+            self.fleet = "test"
 
         #For testing & development only
         try:

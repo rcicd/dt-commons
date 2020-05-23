@@ -108,7 +108,9 @@ class ArchAPIClient:
                             if "configuration" in mod_config:
                                 #Virtually append module configuration info to configuration file
                                 config_info["modules"][m]["configuration"] = mod_config["configuration"]
-
+                                #if command was specified in config file, attach module info for input to DockerClient
+                                if "command" in mods[m]:
+                                    config_info["modules"][m]["configuration"]["command"] = mods[m]["command"]
                 return config_info
 
         except FileNotFoundError: #error msg
