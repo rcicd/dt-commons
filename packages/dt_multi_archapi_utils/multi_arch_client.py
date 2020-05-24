@@ -130,10 +130,10 @@ class MultiArchAPIClient:
         return config_list
     """
 
-    def configuration_info(self, config, fleet):
+    def configuration_info(self, config):
         #Initialize worker with fleet and port
-        fleet = self.cl_fleet.clean_list(fleet)
-        self.work = MultiApiWorker(fleet=fleet, port=self.port)
+        #fleet = self.cl_fleet.clean_list(fleet)
+        #self.work = MultiApiWorker(fleet=fleet, port=self.port)
 
         #Initialize with main response
         config_info_list = self.main_api.configuration_info(config)
