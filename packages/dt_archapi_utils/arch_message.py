@@ -32,13 +32,13 @@ class JobLog:
         self.log["id"] = id
         self.log["status"] = "processing"
         self.log["progress"] = 0
-        self.log["log"] = {}
+        self.log["log"] = []
         self.log["time_started"] = str(datetime.datetime.now())
-        self.fill = []
 
     def record(self, message):
         #do not create a dict with timestamp as key
-        self.log["log"] = self.fill.append([str(datetime.datetime.now()), message])
+        log_format = [str(datetime.datetime.now()), message]
+        self.log["log"].append(log_format)
 
     def update_progress(self, new_value):
         if new_value >= 0 and new_value <= 100:

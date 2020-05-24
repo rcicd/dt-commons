@@ -95,6 +95,7 @@ class ApiWorker:
 
 ######################################################################################
 #SUBPROCESSES: used as input for Process() objects, have no real output
+#only here; start new JobLog
 
     def set_config_proc(self, mod_config, log):
         #Get process id from OS & set logging service
