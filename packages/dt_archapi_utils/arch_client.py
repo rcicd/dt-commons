@@ -78,7 +78,11 @@ class ArchAPIClient:
 
     def configuration_status(self):
         #currently same as default_response
-        return self.status.msg
+        #return self.status.msg
+        config_status = {}
+        config_status = self.work.container_status()
+        return config_status
+
 
 
     def configuration_list(self):
@@ -108,9 +112,11 @@ class ArchAPIClient:
                             if "configuration" in mod_config:
                                 #Virtually append module configuration info to configuration file
                                 config_info["modules"][m]["configuration"] = mod_config["configuration"]
-                                #if command was specified in config file, attach module info for input to DockerClient
-                                if "command" in mods[m]:
-                                    config_info["modules"][m]["configuration"]["command"] = mods[m]["command"]
+                                #if any additional command was specified in config file, attach module info for input to DockerClient
+                                for other in {"command", "privileged", "mem_limit", "memswap_limit", "stdin_open", "tty", "detach", "environment", "restart_policy"}
+                                    #fully compatible with Docker SDK for Python client.containers.run()
+                                    if other in mods[m]:
+                                        config_info["modules"][m]["configuration"][other] = mods[m][other]
                 return config_info
 
         except FileNotFoundError: #error msg

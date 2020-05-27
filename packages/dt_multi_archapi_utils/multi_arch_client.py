@@ -73,6 +73,21 @@ class MultiArchAPIClient:
                 def_response_list["data"][name] = self.work.http_get_request(device=name, endpoint='/')
             return def_response_list
 
+
+    def configuration_status(self, fleet):
+        #Initialize worker with fleet and port
+        fleet = self.cl_fleet.clean_list(fleet)
+        self.work = MultiApiWorker(fleet=fleet, port=self.port)
+
+        #Initialize with main response
+        config_status_list = {}
+        config_status_list = self.main_api.configuration_status()
+
+        for name in fleet:
+            config_status_list["data"][name] = self.work.http_get_request(device=name, endpoint='/configuration/status')
+        return config_status_list
+
+
     """
     def configuration_list(self, fleet):
         #Initialize worker with fleet and port

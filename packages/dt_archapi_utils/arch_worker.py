@@ -92,6 +92,14 @@ class ApiWorker:
         c = ConfigMessage()
         return c.msg
 
+    def container_status(self):
+        #similar to Docker ps command
+        c = {}
+        c = self.client.containers.list(all=True)
+        return c
+
+
+
 
 ######################################################################################
 #SUBPROCESSES: used as input for Process() objects, have no real output
