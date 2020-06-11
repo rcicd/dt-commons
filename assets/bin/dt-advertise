@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+if [ $# -eq 0 ]; then
+    printf "Usage:\n\n\tdt-advertise MESSAGE_TYPE [JSON_PAYLOAD]\n\n"
+    echo "No arguments supplied. Exiting."
+    exit 1
+fi
+
+if [ $# -ge 3 ]; then
+    printf "Usage:\n\n\tdt-advertise MESSAGE_TYPE [JSON_PAYLOAD]\n\n"
+    echo "Too many arguments. Exiting."
+    exit 2
+fi
+
+HOSTNAME=$(hostname)
+MESSAGE_TYPE="$1"
+JSON_PAYLOAD="{}"
+
+if [ $# -eq 2 ]; then
+  JSON_PAYLOAD="$2"
+fi
+
+avahi-publish-service "DT::${MESSAGE_TYPE}::${HOSTNAME}" "_duckietown._tcp" 0 "${JSON_PAYLOAD}"
