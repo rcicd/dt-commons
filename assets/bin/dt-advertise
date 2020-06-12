@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+source /environment.sh
+
+dt-init
+
 if [ $# -eq 0 ]; then
     printf "Usage:\n\n\tdt-advertise MESSAGE_TYPE [JSON_PAYLOAD]\n\n"
     echo "No arguments supplied. Exiting."
@@ -20,4 +24,6 @@ if [ $# -eq 2 ]; then
   JSON_PAYLOAD="$2"
 fi
 
-avahi-publish-service "DT::${MESSAGE_TYPE}::${HOSTNAME}" "_duckietown._tcp" 0 "${JSON_PAYLOAD}"
+dt-exec avahi-publish-service "DT::${MESSAGE_TYPE}::${HOSTNAME}" "_duckietown._tcp" 0 "${JSON_PAYLOAD}"
+
+dt-join
