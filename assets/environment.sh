@@ -27,6 +27,7 @@ dt-launchfile-init() {
   # register signal handlers
   dt-register-signals
   # create CODE_DIR variable
+  # TODO: in template v2, LAUNCHFILE is not declared anymore, so this will not work
   CODE_DIR="$( cd "$( dirname "${LAUNCHFILE}" )" > /dev/null 2>&1 && pwd )"
   export CODE_DIR
 }
@@ -35,7 +36,7 @@ dt-launchfile-join() {
   # wait for the process to end
   dt-join
   # wait for stdout to flush, then announce app termination
-  sleep 1
+  sleep 0.5
   printf "<= App terminated!\n"
 }
 
