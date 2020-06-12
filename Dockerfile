@@ -82,7 +82,7 @@ COPY assets/entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 
 # install launcher scripts
-COPY ./launch/default.sh "${LAUNCH_PATH}/"
+COPY ./launchers/default.sh "${LAUNCH_PATH}/"
 RUN /utils/install_launchers "${LAUNCH_PATH}"
 
 # define default command
