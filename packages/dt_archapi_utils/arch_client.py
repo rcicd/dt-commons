@@ -1,30 +1,26 @@
 #!/usr/bin/env python3
-#This script is part of the DT Architecture Library for dt-commons
+#This is the DT Architecture Library for dt-commons
+
+#THIS LIB INCLUDES FUNCTIONS THAT ALLOW TO COMMUNICATE WITH AN ARCHITECTURE API
+#RUNNING ON A SINGLE ROBOT, BUT DO NOT SPECIFY THE REQUIRED API FOR THAT. I.E.
+#THE REQUIRED SERVER IS NOT RUNNING WITHIN THE LIBRARY.
+
+#Define msg types for various endpoints of a single architecture api
 
 import yaml
 import docker
 import os
-import shutil
 import git
 import glob
 
 from git import Repo
 from .arch_message import ApiMessage
-from .arch_worker import ApiWorker
-
-'''
-    THIS LIB INCLUDES FUNCTIONS THAT ALLOW TO COMMUNICATE WITH AN ARCHITECTURE
-    API RUNNING ON A SINGLE ROBOT (MSG TYPES FOR VARIOUS ENDPOINTS OF A SINGLE
-    ARCHITECTURE API), BUT DO NOT SPECIFY THE REQUIRED API FOR THAT. I.E. THE
-    REQUIRED SERVER IS NOT RUNNING WITHIN THE LIBRARY
-'''
 
 class ArchAPIClient:
     def __init__(self, hostname="hostname", robot_type=None, client=None):
         #Initialize robot hostname & docker.DockerClient()
         self.hostname = hostname
         self.client = client
-        self.name = os.environ['VEHICLE_NAME']
 
         #Initialize folders and directories
         self.active_config = None
@@ -34,7 +30,7 @@ class ArchAPIClient:
 
         self.dt_version = "ente"
         self.status = ApiMessage()
-        self.work = ApiWorker(self.client)
+        self.error = ApiMessage()
 
         #Retract robot_type
         if robot_type is None:
@@ -43,25 +39,21 @@ class ArchAPIClient:
             elif os.path.isfile("/data/stats/init_sd_card/parameters/robot_type"):
                 self.robot_type = open("/data/stats/init_sd_card/parameters/robot_type").readline()
             else: #error upon initialization = status
-                self.status.msg["status"] = "error"
-                self.status.msg["message"] = "could not find robot_type in expected paths"
-                self.status.msg["data"] = {}
-                self.robot_type = ""
+                self.status("error", "Could not find robot type from expected paths", None)
         else:
             self.robot_type = robot_type
 
-        #Include !up-to-date! ente version of dt-architecture-data repo
-        if os.path.isdir("/data/assets/dt-architecture-data"):
-            #danger! bad coding could lead to required reflashing
-            shutil.rmtree("/data/assets/dt-architecture-data")
-            os.makedirs("/data/assets", exist_ok=True)
-            git.Git("/data/assets").clone("git://github.com/duckietown/dt-architecture-data.git", branch=self.dt_version)
-        else:
+        #Include ente version of dt-architecture-data repo
+        if not os.path.isdir("/data/assets/dt-architecture-data"):
             os.makedirs("/data/assets", exist_ok=True)
             git.Git("/data/assets").clone("git://github.com/duckietown/dt-architecture-data.git", branch=self.dt_version)
 
         self.config_path = "/data/assets/dt-architecture-data/configurations/"+self.robot_type
         self.module_path = "/data/assets/dt-architecture-data/modules/"
+
+        #Initialize configuration & module endpoints
+        self.configuration = []  #empty array, with all endpoints in it
+        self.module = []  #empty list, with all endpoints in it
 
 
 #RE-USE INITIALIZED PATHS: in multi_arch_client
@@ -74,86 +66,63 @@ class ArchAPIClient:
 
 #PASSIVE MESSAGING: monitoring (info, list, status) requests
     def default_response(self):
-        return self.status.msg
+        return self.status #.msg if message only
 
     def configuration_status(self):
-        #currently same as default_response
-        #return self.status.msg
-        config_status = {}
-        config_status = self.work.container_status()
-        return config_status
-
-
+        self.configuration.status = json.dumps(self.status)
+        return self.configuration.status
 
     def configuration_list(self):
-        config_list = {} #re-initialize every time called for (empty when error)
+        self.configuration.list = {} #re-initialize every time called for (empty when error)
         if self.config_path is not None:
             config_paths = glob.glob(self.config_path + "/*.yaml")
-            config_list["configurations"] = [os.path.splitext(os.path.basename(f))[0] for f in config_paths]
+            self.configuration.list["configurations"] = [os.path.splitext(os.path.basename(f))[0] for f in config_paths]
         else: #error msg
-            self.status.msg["status"] = "error"
-            self.status.msg["message"] = "could not find configurations for " + self.robot_type + " in dt-architecture-data"
-            self.status.msg["data"] = {}
-            return {}
-
-        return config_list
+            return self.error("error", "could not find configurations (dt-docker-data)", None)
+        return self.configuration.list
 
 
     def configuration_info(self, config):
+        self.configuration.info = {} #re-initialize every time called for (empty when error)
         try:
             with open(self.config_path + "/" + config + ".yaml", 'r') as file:
-                config_info = yaml.load(file, Loader=yaml.FullLoader)
-                if "modules" in config_info:
-                    mods = config_info["modules"]
+                data = yaml.load(file)
+                if "modules" in data:
+                    mods = data["modules"]
                     for m in mods:
                         if "type" in mods[m]:
                             mod_type = mods[m]["type"]
                             mod_config = self.module_info(mod_type)
                             if "configuration" in mod_config:
-                                #Virtually append module configuration info to configuration file
-                                config_info["modules"][m]["configuration"] = mod_config["configuration"]
-                                #if any additional command was specified in config file, attach module info for input to DockerClient
-                                for other in {"command", "privileged", "mem_limit", "memswap_limit", "stdin_open", "tty", "detach", "environment", "restart_policy"}:
-                                    #fully compatible with Docker SDK for Python client.containers.run()
-                                    if other in mods[m]:
-                                        config_info["modules"][m]["configuration"][other] = mods[m][other]
-                return config_info
-
+                                data["modules"][m]["configuration"] = mod_config["configuration"]
+                self.configuration.info = data
+                return self.configuration.info
         except FileNotFoundError: #error msg
-            self.status.msg["status"] = "error"
-            self.status.msg["message"] = "Configuration file not found in " + self.config_path + "/" + config + ".yaml"
-            self.status.msg["data"] = {}
-            return {}
+            return self.error("error", "Configuration file not found", self.config_path + "/" + config + ".yaml")
 
 
     def module_list(self):
-        mod_list = {} #re-initialize every time called for (empty when error)
+        self.module.list = {} #re-initialize every time called for (empty when error)
         yaml_paths = glob.glob(self.module_path + "/*.yaml")
-        mod_list["modules"] = []
         for file in yaml_paths:
             try:
                 with open(file, 'r') as fd:
                     print ("loading module: " + file)
-                    config = yaml.load(fd, Loader=yaml.FullLoader)
+                    config = yaml.load(fd)
                     filename, ext = os.path.splitext(os.path.basename(file))
-                    #mod_list["modules"] = [] #put here, so error msg can be sent
-                    mod_list["modules"].append(filename)
-
+                    self.module.list["modules"] = [] #put here, so error msg can be sent
+                    self.module.list["modules"].append(filename)
             except FileNotFoundError: #error msg
-                self.status.msg["status"] = "error"
-                self.status.msg["message"] = "Modules not found in " + self.module_path + file + ".yaml"
-                self.status.msg["data"] = {}
-                return {}
-                #return self.status.error(status="error", msg="Module file not found", data=self.module_path + "/" + file + ".yaml")
-
-        return mod_list
+                return self.error("error", "Module file not found", self.module_path + "/" + file + ".yaml")
+        return self.module.list
 
 
     def module_info(self, module):
+        self.module.info = {} #re-initialize every time called for (empty when error)
         try:
-            with open(self.module_path + module + ".yaml", 'r') as fd: #"/" +
-                mod_info = yaml.load(fd, Loader=yaml.FullLoader)
-                config = mod_info["configuration"]
+            with open(self.module_path + "/" + module + ".yaml", 'r') as fd:
+                self.module.info = yaml.load(fd)
+                config = self.module.info["configuration"]
 
                 #Update ports for pydocker from docker-compose
                 if "ports" in config:
@@ -182,35 +151,26 @@ class ArchAPIClient:
                 if "image" in config:
                     config["image"] = config["image"].replace('${ARCH-arm32v7}','arm32v7' )
 
-                return mod_info
-
         except FileNotFoundError: #error msg
-            self.status.msg["status"] = "error"
-            self.status.msg["message"] = "Module file not found in " + self.module_path + module + ".yaml"
-            self.status.msg["data"] = {}
-            return {}
-            #return self.status.error(status="error", msg="Module not found", data=self.module_path + module + ".yaml")
+            return self.error("error", "Module not found", self.module_path + module + ".yaml")
+
+        return self.module.info
 
 
-#ACTIVE MESSAGING: activation (pull, stop, ...) requests requiring a DockerClient()
-    def configuration_set_config(self, config):
-        #Get virtually extended config file with module specs
-        mod_config = self.configuration_info(config)
-        return self.work.set_config(mod_config) #removed str
+#ACTIVE MESSAGING: activation (pull, stop, ...) requests
+#IGNORE: these require an active docker_client and self.worker functions
+'''
+    def configuration_set_config(self, config_name):
+        data = self.configuration_info(config_name)
+        return str(self.worker.apply_configuration(data))
 
     def pull_image(self, url):
-        #url of form {image_url}:{image_tag}
-        return self.work.pull_image(url)
+        return self.worker.pull_image(url)
 
     def monitor_id(self, id):
-        #Get current job status, using id=ETag
-        if int(id) in self.work.log:
-            return self.work.log[int(id)]
+        #get current job status, using an ETag
+        if int(id) in self.worker.log:
+            return self.worker.log[int(id)]
         else:
-            return self.work.log.copy()
-
-    def clear_job_log(self):
-        return self.work.clear_log()
-
-    def clearance(self):
-        return self.work.clearance()
+            return self.worker.log.copy()
+'''
