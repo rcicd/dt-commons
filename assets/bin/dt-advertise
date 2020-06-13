@@ -1,29 +1,44 @@
-#!/usr/bin/env bash
+#!/usr/bin/env python3
 
-source /environment.sh
+import json
+import argparse
+from dt_class_utils import DTProcess
+from dt_service_utils import DTService
 
-dt-init
 
-if [ $# -eq 0 ]; then
-    printf "Usage:\n\n\tdt-advertise MESSAGE_TYPE [JSON_PAYLOAD]\n\n"
-    echo "No arguments supplied. Exiting."
-    exit 1
-fi
+class DTServiceAdvertiser(DTProcess):
 
-if [ $# -ge 3 ]; then
-    printf "Usage:\n\n\tdt-advertise MESSAGE_TYPE [JSON_PAYLOAD]\n\n"
-    echo "Too many arguments. Exiting."
-    exit 2
-fi
+    def __init__(self, name, port=0, payload=None):
+        super(DTServiceAdvertiser, self).__init__(name="ServiceAdvertiser[%s]" % name)
+        self._service = DTService(name, port, payload)
 
-HOSTNAME=$(hostname)
-MESSAGE_TYPE="$1"
-JSON_PAYLOAD="{}"
 
-if [ $# -eq 2 ]; then
-  JSON_PAYLOAD="$2"
-fi
-
-dt-exec avahi-publish-service "DT::${MESSAGE_TYPE}::${HOSTNAME}" "_duckietown._tcp" 0 "${JSON_PAYLOAD}"
-
-dt-join
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    # define parser arguments
+    parser.add_argument(
+        "--name",
+        type=str,
+        required=True,
+        help="Name of the Duckietown service to advertise"
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=0,
+        help="TCP port on which the service is available"
+    )
+    parser.add_argument(
+        "--payload",
+        type=str,
+        default=None,
+        help="JSON string containing the service payload"
+    )
+    parsed = parser.parse_args()
+    # ---
+    if not (0 <= parsed.port <= 65535):
+        raise ValueError('Port number must be within range [0, 65535]')
+    if parsed.payload is not None:
+        parsed.payload = json.loads(parsed.payload)
+    # create service adveriser
+    publisher = DTServiceAdvertiser(parsed.name, parsed.port, parsed.payload)
