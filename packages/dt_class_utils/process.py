@@ -69,10 +69,12 @@ class DTProcess(object):
     # noinspection PyUnusedLocal
     def _on_sigint(self, sig, frame):
         if self._sigint_counter == 0:
+            self._sigint_counter = 1
             self.logger.info('Shutdown request received! Gracefully terminating....')
             self.logger.info('Press [Ctrl+C] three times to force kill.')
             self.shutdown()
-        if self._sigint_counter == 3:
+        elif self._sigint_counter == 3:
             self.logger.info('Escalating to SIGKILL.')
             self.kill()
-        self._sigint_counter += 1
+        else:
+            self._sigint_counter += 1
