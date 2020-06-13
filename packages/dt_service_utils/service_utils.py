@@ -8,7 +8,9 @@ from threading import Thread, Semaphore
 from dt_class_utils import DTProcess
 
 DT_SERVICE_TYPE = '_duckietown._tcp.local.'
-DT_SERVICE_NAME = lambda name: f'DT::{name}::{socket.gethostname()}.{DT_SERVICE_TYPE}'
+DT_SERVICE_NAME = lambda name: 'DT::{name}::{hostname}.{type}'.format(
+    name=name, hostname=socket.gethostname(), type=DT_SERVICE_TYPE
+)
 HEARTBEAT_HZ = 0.5
 PASSIVELY_REPUBLISH_EVERY_SECS = 60.0
 CHECK_FOR_INTERFACES_EVERY_SECS = 10.0
@@ -80,7 +82,9 @@ class DTService:
             # new ifaces
             if time.time() - self._last_checked_ifaces > CHECK_FOR_INTERFACES_EVERY_SECS:
                 if self._has_new_ipv4_addresses():
-                    self._app.logger.debug(f'Service[{self._name}]: Network configuration changed')
+                    self._app.logger.debug(
+                        'Service[{}]: Network configuration changed'.format(self._name)
+                    )
                     self._do_work = True
                 self._last_checked_ifaces = time.time()
             # sleep
@@ -98,14 +102,14 @@ class DTService:
 
     def resume(self):
         if not self._active:
-            self._app.logger.debug(f'Service[{self._name}]: RESUMED!')
+            self._app.logger.debug('Service[{}]: RESUMED!'.format(self._name))
         # ---
         self._active = True
         self.republish_now()
 
     def pause(self):
         if self._active:
-            self._app.logger.debug(f'Service[{self._name}]: PAUSED!')
+            self._app.logger.debug('Service[{}]: PAUSED!'.format(self._name))
         # ---
         self._active = False
         self.republish_now()
