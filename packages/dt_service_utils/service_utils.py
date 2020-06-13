@@ -10,7 +10,8 @@ from dt_class_utils import DTProcess
 DT_SERVICE_TYPE = '_duckietown._tcp.local.'
 DT_SERVICE_NAME = lambda name: f'DT::{name}::{socket.gethostname()}.{DT_SERVICE_TYPE}'
 HEARTBEAT_HZ = 0.5
-PASSIVELY_REPUBLISH_EVERY_SECS = 30.0
+PASSIVELY_REPUBLISH_EVERY_SECS = 60.0
+CHECK_FOR_INTERFACES_EVERY_SECS = 10.0
 
 
 class DTService:
@@ -28,10 +29,12 @@ class DTService:
         self._payload = json.dumps((payload if payload is not None else dict())).encode()
         self._do_work = True
         self._last_worked = 0
+        self._last_checked_ifaces = 0
         self._worker = Thread(target=self._work)
         self._active = not paused
         self._is_shutdown = False
         self._published_once = False
+        self._last_published_IPs = []
         self._network_semaphore = Semaphore(1)
         DTProcess.get_instance().register_shutdown_callback(self.shutdown)
         # start worker
@@ -50,11 +53,13 @@ class DTService:
                         try:
                             self._zc.update_service(srv)
                             self._published_once = True
+                            self._last_published_IPs = srv.addresses
                         except KeyError:
                             # updating failed because of KeyError, try registering first
                             try:
                                 self._zc.register_service(srv)
                                 self._published_once = True
+                                self._last_published_IPs = srv.addresses
                             except (zeroconf.NonUniqueNameException, BaseException):
                                 pass
                         except BaseException:
@@ -67,10 +72,17 @@ class DTService:
                                 self._zc.unregister_service(srv)
                         except (KeyError, BaseException):
                             pass
+                self._do_work = False
                 self._last_worked = time.time()
             # passive update
             if time.time() - self._last_worked > PASSIVELY_REPUBLISH_EVERY_SECS:
                 self._do_work = True
+            # new ifaces
+            if time.time() - self._last_checked_ifaces > CHECK_FOR_INTERFACES_EVERY_SECS:
+                if self._has_new_ipv4_addresses():
+                    self._app.logger.debug(f'Service[{self._name}]: Network configuration changed')
+                    self._do_work = True
+                self._last_checked_ifaces = time.time()
             # sleep
             time.sleep(1.0 / HEARTBEAT_HZ)
 
@@ -86,14 +98,14 @@ class DTService:
 
     def resume(self):
         if not self._active:
-            self._app.logger.debug(f'Service {self._name} RESUMED!')
+            self._app.logger.debug(f'Service[{self._name}]: RESUMED!')
         # ---
         self._active = True
         self.republish_now()
 
     def pause(self):
         if self._active:
-            self._app.logger.debug(f'Service {self._name} PAUSED!')
+            self._app.logger.debug(f'Service[{self._name}]: PAUSED!')
         # ---
         self._active = False
         self.republish_now()
@@ -120,21 +132,28 @@ class DTService:
         return zeroconf.ServiceInfo(
             type_=DT_SERVICE_TYPE,
             name=DT_SERVICE_NAME(self._name),
-            addresses=list(map(self._encode_ip4, self._get_all_ip4_addresses())),
+            addresses=self._get_all_ipv4_addresses(),
             port=self._port,
             properties=b' ' + self._payload
         )
 
+    def _has_new_ipv4_addresses(self):
+        ipv4s_now = set(DTService._get_all_ipv4_addresses())
+        ipv4s_last = set(self._last_published_IPs)
+        return \
+            len(ipv4s_now) != len(ipv4s_last) or \
+            len(ipv4s_now.intersection(ipv4s_last)) != len(ipv4s_now)
+
     @staticmethod
-    def _get_all_ip4_addresses():
+    def _get_all_ipv4_addresses():
         ip_list = []
         for iface in netifaces.interfaces():
             addresses = netifaces.ifaddresses(iface)
             if netifaces.AF_INET in addresses:
                 for link in addresses[netifaces.AF_INET]:
-                    ip_list.append(link['addr'])
+                    ip_list.append(DTService._encode_ipv4(link['addr']))
         return ip_list
 
     @staticmethod
-    def _encode_ip4(ip4):
+    def _encode_ipv4(ip4):
         return socket.inet_pton(socket.AF_INET, ip4)
