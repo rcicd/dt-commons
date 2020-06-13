@@ -9,7 +9,8 @@ from dt_class_utils import DTProcess
 
 DT_SERVICE_TYPE = '_duckietown._tcp.local.'
 DT_SERVICE_NAME = lambda name: f'DT::{name}::{socket.gethostname()}.{DT_SERVICE_TYPE}'
-SERVICE_UPDATE_HZ = 1.0 / 10.0  # refresh once every 10 seconds
+HEARTBEAT_HZ = 0.5
+PASSIVELY_REPUBLISH_EVERY_SECS = 30.0
 
 
 class DTService:
@@ -25,6 +26,8 @@ class DTService:
         self._name = name
         self._port = port
         self._payload = json.dumps((payload if payload is not None else dict())).encode()
+        self._do_work = True
+        self._last_worked = 0
         self._worker = Thread(target=self._work)
         self._active = not paused
         self._is_shutdown = False
@@ -36,46 +39,64 @@ class DTService:
 
     def _work(self):
         while True:
-            with self._network_semaphore:
-                if self._is_shutdown:
-                    return
-                # ---
-                srv = self._service_info()
-                if self._active:
-                    # register or update
-                    try:
-                        self._zc.update_service(srv)
-                        self._published_once = True
-                    except KeyError:
-                        # updating failed because of KeyError, try registering first
+            if self._do_work:
+                with self._network_semaphore:
+                    if self._is_shutdown:
+                        return
+                    # ---
+                    srv = self._service_info()
+                    if self._active:
+                        # register or update
                         try:
-                            self._zc.register_service(srv)
+                            self._zc.update_service(srv)
                             self._published_once = True
-                        except (zeroconf.NonUniqueNameException, BaseException):
+                        except KeyError:
+                            # updating failed because of KeyError, try registering first
+                            try:
+                                self._zc.register_service(srv)
+                                self._published_once = True
+                            except (zeroconf.NonUniqueNameException, BaseException):
+                                pass
+                        except BaseException:
                             pass
-                    except BaseException:
-                        pass
-                else:
-                    # unregister
-                    try:
-                        if self._published_once:
-                            self._published_once = False
-                            self._zc.unregister_service(srv)
-                    except (KeyError, BaseException):
-                        pass
-
+                    else:
+                        # unregister
+                        try:
+                            if self._published_once:
+                                self._published_once = False
+                                self._zc.unregister_service(srv)
+                        except (KeyError, BaseException):
+                            pass
+                self._last_worked = time.time()
+            # passive update
+            if time.time() - self._last_worked > PASSIVELY_REPUBLISH_EVERY_SECS:
+                self._do_work = True
             # sleep
-            time.sleep(1.0 / SERVICE_UPDATE_HZ)
+            time.sleep(1.0 / HEARTBEAT_HZ)
+
+    def update(self, payload=None):
+        # update payload if given
+        if payload is not None:
+            self._payload = json.dumps(payload).encode()
+        # work
+        self._do_work = True
+
+    def republish_now(self):
+        self._do_work = True
 
     def resume(self):
         if not self._active:
             self._app.logger.debug(f'Service {self._name} RESUMED!')
+        # ---
         self._active = True
+        self.republish_now()
 
     def pause(self):
         if self._active:
             self._app.logger.debug(f'Service {self._name} PAUSED!')
+        # ---
         self._active = False
+        self.republish_now()
 
     def yes(self):
         return self.resume()
