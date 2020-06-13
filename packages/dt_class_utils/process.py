@@ -9,7 +9,13 @@ from .app_status import AppStatus
 
 class DTProcess(object):
 
+    __instance__ = None
+
     def __init__(self, name=None):
+        if DTProcess.__instance__ is not None:
+            print('ERROR: You are trying to create two instances of type DTProcess. '
+                  'This is not allowed, only one instance is allowed per process.')
+            exit(1)
         self._status = AppStatus.INITIALIZING
         self._sigint_counter = 0
         self._app_name = type(self).__name__ if not name else name
@@ -23,6 +29,12 @@ class DTProcess(object):
             self.logger.setLevel(logging.DEBUG)
         self._start_time = time.time()
         self._status = AppStatus.RUNNING
+        # store singleton
+        DTProcess.__instance__ = self
+
+    @staticmethod
+    def get_instance():
+        return DTProcess.__instance__
 
     def start_time(self):
         return self._start_time
