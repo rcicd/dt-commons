@@ -1,7 +1,10 @@
 #!/bin/bash
+
+# if anything weird happens from now on, STOP
 set -e
 
-export DT_MODULE_INSTANCE=$(basename $(cat /proc/1/cpuset))
+DT_MODULE_INSTANCE=$(basename "$(cat /proc/1/cpuset)")
+export DT_MODULE_INSTANCE
 
 configure_vehicle(){
   # check the mandatory arguments
@@ -14,9 +17,7 @@ configure_vehicle(){
   export VEHICLE_NAME="${VEHICLE_NAME}"
 
   # check optional arguments
-  VEHICLE_IP_IS_SET=0
   if [ ${#VEHICLE_IP} -ne 0 ]; then
-    VEHICLE_IP_IS_SET=1
     echo "The environment variable VEHICLE_IP is set to '${VEHICLE_IP}'. Adding to /etc/hosts."
     echo "${VEHICLE_IP} ${VEHICLE_NAME} ${VEHICLE_NAME}.local" >> /etc/hosts
   fi
@@ -45,6 +46,7 @@ if [ "${DEBUG}" = "1" ]; then echo "=> Setting up PYTHONPATH"; fi
 configure_python
 if [ "${DEBUG}" = "1" ]; then echo -e "<= Done!\n"; fi
 
+# if anything weird happens from now on, CONTINUE
 set +e
 
 # reuse LAUNCHER as CMD if the var is set and the first argument is `--`
