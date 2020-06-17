@@ -13,11 +13,13 @@ FROM ${ARCH}/${BASE_IMAGE}:${BASE_TAG}
 
 # configure environment
 ARG ARCH
+ARG OS_DISTRO
 ENV SOURCE_DIR /code
 ENV LAUNCH_DIR /launch
 ENV DUCKIEFLEET_ROOT "/data/config"
 ENV READTHEDOCS True
 ENV QEMU_EXECVE 1
+ENV OS_DISTRO "${OS_DISTRO}"
 WORKDIR "${SOURCE_DIR}"
 
 # copy QEMU
@@ -49,7 +51,6 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 # update alternatives for python, python3
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.7 1
 RUN update-alternatives --install /usr/bin/python3 python /usr/bin/python3.7 1
 
 # install pip3
