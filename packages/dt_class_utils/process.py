@@ -5,6 +5,7 @@ import logging
 import signal
 
 from .app_status import AppStatus
+from dt_module_utils import set_module_healthy
 
 
 class DTProcess(object):
@@ -28,7 +29,7 @@ class DTProcess(object):
         if 'DEBUG' in os.environ and os.environ['DEBUG'].lower() in ['true', 'yes', '1']:
             self.logger.setLevel(logging.DEBUG)
         self._start_time = time.time()
-        self._status = AppStatus.RUNNING
+        self.status = AppStatus.RUNNING
         # store singleton
         DTProcess.__instance__ = self
 
@@ -42,11 +43,25 @@ class DTProcess(object):
     def uptime(self):
         return time.time() - self._start_time
 
+    @property
     def status(self):
         return self._status
 
     def name(self):
         return self._app_name
+
+    @status.setter
+    def status(self, status):
+        if not isinstance(status, AppStatus):
+            raise ValueError(
+                f"Trying to set App status to object of type {str(type(status))}, "
+                f"expected type 'dt_class_utils.AppStatus' instead."
+            )
+        self.logger.info('App status changed [%s] -> [%s]' % (self._status.name, status.name))
+        self._status = status
+        # set health
+        if status == AppStatus.RUNNING:
+            set_module_healthy()
 
     def is_shutdown(self):
         return self._status == AppStatus.TERMINATING
