@@ -88,7 +88,7 @@ COPY assets/utils/* /utils/
 RUN echo none > /status
 HEALTHCHECK \
     --interval=5s \
-    CMD grep -q healthy /status
+    CMD grep -q healthy /health
 
 # configure entrypoint
 COPY assets/entrypoint.sh /entrypoint.sh
