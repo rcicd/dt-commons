@@ -54,8 +54,8 @@ class DTProcess(object):
     def status(self, status):
         if not isinstance(status, AppStatus):
             raise ValueError(
-                f"Trying to set App status to object of type {str(type(status))}, "
-                f"expected type 'dt_class_utils.AppStatus' instead."
+                "Trying to set App status to object of type {0}, "
+                "expected type 'dt_class_utils.AppStatus' instead.".format(str(type(status)))
             )
         self.logger.info('App status changed [%s] -> [%s]' % (self._status.name, status.name))
         self._status = status
