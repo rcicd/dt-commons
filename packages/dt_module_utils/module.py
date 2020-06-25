@@ -25,12 +25,12 @@ def get_module_health():
 def _set_module_health(new_health):
     health = get_module_health()
     if new_health not in ['healthy', 'unhealthy']:
-        logger.warning(f'Health "{new_health}" not recognized!')
+        logger.warning('Health "{0}" not recognized!'.format(new_health))
         return
     # ---
     if health == new_health:
         return
-    logger.debug(f'Updating module health [{health}] -> [{new_health}]')
+    logger.debug('Updating module health [{0}] -> [{1}]'.format(health, new_health))
     # try to write the health status
     try:
         with open(HEALTH_FILE, 'wt') as fout:
