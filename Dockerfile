@@ -11,29 +11,36 @@ ARG BASE_IMAGE=ubuntu
 # define base image
 FROM ${ARCH}/${BASE_IMAGE}:${BASE_TAG}
 
-# configure environment
+# recall all arguments
+ARG REPO_NAME
+ARG MAINTAINER
 ARG ARCH
+ARG MAJOR
 ARG OS_DISTRO
+ARG BASE_TAG
+ARG BASE_IMAGE
+
+# configure environment
 ENV SOURCE_DIR /code
 ENV LAUNCH_DIR /launch
 ENV DUCKIEFLEET_ROOT "/data/config"
 ENV READTHEDOCS True
 ENV QEMU_EXECVE 1
 ENV OS_DISTRO "${OS_DISTRO}"
+ENV DT_MODULE_TYPE "${REPO_NAME}"
 WORKDIR "${SOURCE_DIR}"
 
 # copy QEMU
 COPY ./assets/qemu/${ARCH}/ /usr/bin/
 
-# define repository path
-ARG REPO_NAME
+# define and create repository path
 ARG REPO_PATH="${SOURCE_DIR}/${REPO_NAME}"
 ARG LAUNCH_PATH="${LAUNCH_DIR}/${REPO_NAME}"
-WORKDIR "${REPO_PATH}"
-
-# create repo directory
 RUN mkdir -p "${REPO_PATH}"
 RUN mkdir -p "${LAUNCH_PATH}"
+ENV DT_REPO_PATH "${REPO_PATH}"
+ENV DT_LAUNCH_PATH "${LAUNCH_PATH}"
+WORKDIR "${REPO_PATH}"
 
 # add python3.7 sources to APT
 RUN echo "deb http://ppa.launchpad.net/deadsnakes/ppa/ubuntu xenial main" >> /etc/apt/sources.list
@@ -85,10 +92,10 @@ RUN mkdir /utils
 COPY assets/utils/* /utils/
 
 # define healthcheck
-RUN echo none > /status
+RUN echo ND > /status
 HEALTHCHECK \
     --interval=5s \
-    CMD grep -q healthy /health
+    CMD cat /health && grep -q ^healthy$ /health
 
 # configure entrypoint
 COPY assets/entrypoint.sh /entrypoint.sh
@@ -102,17 +109,10 @@ RUN /utils/install_launchers "${LAUNCH_PATH}"
 ENV LAUNCHER "default"
 CMD ["bash", "-c", "dt-launcher-${LAUNCHER}"]
 
-# store module name
-LABEL org.duckietown.label.module.type="${REPO_NAME}"
-ENV DT_MODULE_TYPE "${REPO_NAME}"
-
 # store module metadata
-ARG MAJOR
-ARG BASE_TAG
-ARG BASE_IMAGE
-ARG MAINTAINER
-LABEL org.duckietown.label.architecture="${ARCH}"
-LABEL org.duckietown.label.code.location="${REPO_PATH}"
-LABEL org.duckietown.label.code.version.major="${MAJOR}"
-LABEL org.duckietown.label.base.image="${BASE_IMAGE}:${BASE_TAG}"
-LABEL org.duckietown.label.maintainer="${MAINTAINER}"
+LABEL org.duckietown.label.module.type="${REPO_NAME}" \
+    org.duckietown.label.architecture="${ARCH}" \
+    org.duckietown.label.code.location="${REPO_PATH}" \
+    org.duckietown.label.code.version.major="${MAJOR}" \
+    org.duckietown.label.base.image="${BASE_IMAGE}:${BASE_TAG}" \
+    org.duckietown.label.maintainer="${MAINTAINER}"
