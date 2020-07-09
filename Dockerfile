@@ -3,93 +3,62 @@ ARG REPO_NAME="dt-commons"
 ARG MAINTAINER="Andrea F. Daniele (afdaniele@ttic.edu)"
 
 ARG ARCH=arm32v7
-ARG MAJOR=daffy
-ARG OS_DISTRO=xenial
-ARG BASE_TAG=${OS_DISTRO}
-ARG BASE_IMAGE=ubuntu
+ARG DISTRO=daffy
+ARG BASE_TAG=${DISTRO}-${ARCH}
+ARG BASE_IMAGE=dt-base-environment
+ARG LAUNCHER=default
 
 # define base image
-FROM ${ARCH}/${BASE_IMAGE}:${BASE_TAG}
+FROM duckietown/${BASE_IMAGE}:${BASE_TAG}
 
 # recall all arguments
 ARG REPO_NAME
 ARG MAINTAINER
 ARG ARCH
-ARG MAJOR
+ARG DISTRO
 ARG OS_DISTRO
 ARG BASE_TAG
 ARG BASE_IMAGE
-
-# configure environment
-ENV SOURCE_DIR /code
-ENV LAUNCH_DIR /launch
-ENV DUCKIEFLEET_ROOT "/data/config"
-ENV READTHEDOCS True
-ENV QEMU_EXECVE 1
-ENV OS_DISTRO "${OS_DISTRO}"
-ENV DT_MODULE_TYPE "${REPO_NAME}"
-WORKDIR "${SOURCE_DIR}"
-
-# copy QEMU
-COPY ./assets/qemu/${ARCH}/ /usr/bin/
+ARG LAUNCHER
 
 # define and create repository path
 ARG REPO_PATH="${SOURCE_DIR}/${REPO_NAME}"
 ARG LAUNCH_PATH="${LAUNCH_DIR}/${REPO_NAME}"
 RUN mkdir -p "${REPO_PATH}"
 RUN mkdir -p "${LAUNCH_PATH}"
-ENV DT_REPO_PATH "${REPO_PATH}"
-ENV DT_LAUNCH_PATH "${LAUNCH_PATH}"
 WORKDIR "${REPO_PATH}"
 
-# add python3.7 sources to APT
-RUN echo "deb http://ppa.launchpad.net/deadsnakes/ppa/ubuntu xenial main" >> /etc/apt/sources.list
-RUN echo "deb-src http://ppa.launchpad.net/deadsnakes/ppa/ubuntu xenial main" >> /etc/apt/sources.list
-RUN gpg --keyserver keyserver.ubuntu.com --recv 6A755776 \
- && gpg --export --armor 6A755776 | apt-key add -
-
-# copy dependencies (APT)
-COPY ./dependencies-apt.txt "${REPO_PATH}/"
+# keep some arguments as environment variables
+ENV DT_MODULE_TYPE "${REPO_NAME}"
+ENV DT_MAINTAINER "${MAINTAINER}"
+ENV DT_REPO_PATH "${REPO_PATH}"
+ENV DT_LAUNCH_PATH "${LAUNCH_PATH}"
+ENV DT_LAUNCHER "${LAUNCHER}"
 
 # install apt dependencies
+COPY ./dependencies-apt.txt "${REPO_PATH}/"
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
     $(awk -F: '/^[^#]/ { print $1 }' dependencies-apt.txt | uniq) \
   && rm -rf /var/lib/apt/lists/*
 
-# update alternatives for python, python3
-RUN update-alternatives --install /usr/bin/python3 python /usr/bin/python3.7 1
-
-# install pip3
-RUN cd /tmp \
-  && wget --no-check-certificate http://bootstrap.pypa.io/get-pip.py \
-  && python3 ./get-pip.py \
-  && rm ./get-pip.py
-
-# copy dependencies (PIP3)
-COPY ./dependencies-py3.txt "${REPO_PATH}/"
+# install python dependencies
+COPY ./dependencies-py.txt "${REPO_PATH}/"
+RUN pip install -r ${REPO_PATH}/dependencies-py.txt
 
 # install python dependencies
+COPY ./dependencies-py3.txt "${REPO_PATH}/"
 RUN pip3 install -r ${REPO_PATH}/dependencies-py3.txt
 
-# install RPi libs
-ADD assets/vc.tgz /opt/
-COPY assets/00-vmcs.conf /etc/ld.so.conf.d
-RUN ldconfig
-ENV PATH=/opt/vc/bin:${PATH}
-
 # copy the source code
-COPY ./packages/. "${REPO_PATH}/"
+COPY . "${REPO_PATH}/"
 
 # copy binaries
-COPY ./assets/bin/dt-advertise /usr/local/bin/dt-advertise
+COPY ./assets/bin/. /usr/local/bin/
 
-# copy environment
+# copy environment / entrypoint
+COPY assets/entrypoint.sh /entrypoint.sh
 COPY assets/environment.sh /environment.sh
-
-# copy utility scripts
-RUN mkdir /utils
-COPY assets/utils/* /utils/
 
 # define healthcheck
 RUN echo ND > /status
@@ -103,17 +72,17 @@ COPY assets/entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 
 # install launcher scripts
-COPY ./launchers/default.sh "${LAUNCH_PATH}/"
-RUN /utils/install_launchers "${LAUNCH_PATH}"
+COPY ./launchers/. "${LAUNCH_PATH}/"
+RUN dt-install-launchers "${LAUNCH_PATH}"
 
 # define default command
-ENV LAUNCHER "default"
-CMD ["bash", "-c", "dt-launcher-${LAUNCHER}"]
+CMD ["bash", "-c", "dt-launcher-${DT_LAUNCHER}"]
 
 # store module metadata
-LABEL org.duckietown.label.module.type="${REPO_NAME}" \
-    org.duckietown.label.architecture="${ARCH}" \
+LABEL org.duckietown.label.architecture="${ARCH}" \
+    org.duckietown.label.module.type="${REPO_NAME}" \
     org.duckietown.label.code.location="${REPO_PATH}" \
-    org.duckietown.label.code.version.major="${MAJOR}" \
-    org.duckietown.label.base.image="${BASE_IMAGE}:${BASE_TAG}" \
+    org.duckietown.label.code.version.distro="${DISTRO}" \
+    org.duckietown.label.base.image="${BASE_IMAGE}" \
+    org.duckietown.label.base.tag="${BASE_TAG}" \
     org.duckietown.label.maintainer="${MAINTAINER}"

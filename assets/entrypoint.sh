@@ -76,8 +76,8 @@ configure_vehicle(){
 configure_python(){
   # make the code discoverable by python
   for d in $(find ${SOURCE_DIR} -mindepth 1 -maxdepth 1 -type d); do
-    if [ "${DEBUG}" = "1" ]; then echo " > Adding ${d} to PYTHONPATH"; fi
-    export PYTHONPATH="${d}:${PYTHONPATH}"
+    if [ "${DEBUG}" = "1" ]; then echo " > Adding ${d}/packages to PYTHONPATH"; fi
+    export PYTHONPATH="${d}/packages:${PYTHONPATH}"
   done
 }
 
