@@ -1,6 +1,1 @@
 # LIST YOUR APT PACKAGES HERE
-gcc
-wget
-python3.7
-python3.7-dev
-avahi-utils
