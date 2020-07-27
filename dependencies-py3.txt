@@ -2,3 +2,7 @@
 # these are for service registration and discovery
 zeroconf
 netifaces
+
+# these are for various APIs
+flask
+flask-cors
