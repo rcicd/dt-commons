@@ -34,13 +34,13 @@ class DTProcess(object):
         DTProcess.__instance__ = self
 
     @staticmethod
-    def get_instance() -> 'DTProcess':
+    def get_instance():
         return DTProcess.__instance__
 
-    def start_time(self) -> float:
+    def start_time(self):
         return self._start_time
 
-    def uptime(self) -> float:
+    def uptime(self):
         return time.time() - self._start_time
 
     @property
