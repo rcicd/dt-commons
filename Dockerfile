@@ -1,6 +1,8 @@
 # parameters
 ARG REPO_NAME="dt-commons"
 ARG MAINTAINER="Andrea F. Daniele (afdaniele@ttic.edu)"
+ARG DESCRIPTION="Base image containing common libraries and environment setup for non-ROS applications."
+ARG ICON="square"
 
 ARG ARCH=arm32v7
 ARG DISTRO=ente
@@ -13,7 +15,9 @@ FROM duckietown/${BASE_IMAGE}:${BASE_TAG}
 
 # recall all arguments
 ARG REPO_NAME
+ARG DESCRIPTION
 ARG MAINTAINER
+ARG ICON
 ARG ARCH
 ARG DISTRO
 ARG OS_DISTRO
@@ -30,6 +34,8 @@ WORKDIR "${REPO_PATH}"
 
 # keep some arguments as environment variables
 ENV DT_MODULE_TYPE "${REPO_NAME}"
+ENV DT_MODULE_DESCRIPTION "${DESCRIPTION}"
+ENV DT_MODULE_ICON "${ICON}"
 ENV DT_MAINTAINER "${MAINTAINER}"
 ENV DT_REPO_PATH "${REPO_PATH}"
 ENV DT_LAUNCH_PATH "${LAUNCH_PATH}"
@@ -37,10 +43,7 @@ ENV DT_LAUNCHER "${LAUNCHER}"
 
 # install apt dependencies
 COPY ./dependencies-apt.txt "${REPO_PATH}/"
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends \
-    $(awk -F: '/^[^#]/ { print $1 }' dependencies-apt.txt | uniq) \
-  && rm -rf /var/lib/apt/lists/*
+RUN dt-apt-install "${REPO_PATH}/dependencies-apt.txt"
 
 # install python dependencies
 COPY ./dependencies-py3.txt "${REPO_PATH}/"
@@ -68,8 +71,10 @@ RUN dt-install-launchers "${LAUNCH_PATH}"
 CMD ["bash", "-c", "dt-launcher-${DT_LAUNCHER}"]
 
 # store module metadata
-LABEL org.duckietown.label.architecture="${ARCH}" \
-    org.duckietown.label.module.type="${REPO_NAME}" \
+LABEL org.duckietown.label.module.type="${REPO_NAME}" \
+    org.duckietown.label.module.description="${DESCRIPTION}" \
+    org.duckietown.label.module.icon="${ICON}" \
+    org.duckietown.label.architecture="${ARCH}" \
     org.duckietown.label.code.location="${REPO_PATH}" \
     org.duckietown.label.code.version.distro="${DISTRO}" \
     org.duckietown.label.base.image="${BASE_IMAGE}" \

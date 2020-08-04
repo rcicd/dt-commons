@@ -13,7 +13,7 @@ if 'DEBUG' in os.environ and os.environ['DEBUG'].lower() in ['true', 'yes', '1']
 
 def get_module_health():
     health = "ND"
-    if os.path.exists(health):
+    if os.path.isfile(HEALTH_FILE):
         try:
             with open(HEALTH_FILE, 'rt') as fin:
                 health = fin.read().strip('\n').strip(' ')

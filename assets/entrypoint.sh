@@ -132,10 +132,10 @@ debug "<= Done!\n"
 set +e
 
 
-# reuse LAUNCHER as CMD if the var is set and the first argument is `--`
-if [ ${#LAUNCHER} -gt 0 ] && [ "$1" == "--" ]; then
+# reuse DT_LAUNCHER as CMD if the var is set and the first argument is `--`
+if [ ${#DT_LAUNCHER} -gt 0 ] && [ "$1" == "--" ]; then
   shift
-  exec bash -c "dt-launcher-$LAUNCHER $*"
+  exec bash -c "dt-launcher-$DT_LAUNCHER $*"
 else
   exec "$@"
 fi
