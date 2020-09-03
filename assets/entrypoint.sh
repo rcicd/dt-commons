@@ -4,6 +4,7 @@
 CONFIG_DIR=/data/config
 ROBOT_TYPE_FILE=${CONFIG_DIR}/robot_type
 ROBOT_CONFIGURATION_FILE=${CONFIG_DIR}/robot_configuration
+ROBOT_HARDWARE_FILE=${CONFIG_DIR}/robot_hardware
 
 # if anything weird happens from now on, STOP
 set -e
@@ -55,7 +56,7 @@ configure_vehicle(){
 
   # robot_type
   if [ -f "${ROBOT_TYPE_FILE}" ]; then
-      ROBOT_TYPE=$(cat ${ROBOT_TYPE_FILE})
+      ROBOT_TYPE=$(cat "${ROBOT_TYPE_FILE}")
       export ROBOT_TYPE
   else
       echo "WARNING: robot_type file does not exist. Using 'duckiebot' as default type."
@@ -64,18 +65,27 @@ configure_vehicle(){
 
   # robot_configuration
   if [ -f "${ROBOT_CONFIGURATION_FILE}" ]; then
-      ROBOT_CONFIGURATION=$(cat ${ROBOT_CONFIGURATION_FILE})
+      ROBOT_CONFIGURATION=$(cat "${ROBOT_CONFIGURATION_FILE}")
       export ROBOT_CONFIGURATION
   else
       echo "WARNING: robot_configuration file does not exist."
       export ROBOT_CONFIGURATION="__NOTSET__"
+  fi
+
+  # robot_hardware
+  if [ -f "${ROBOT_HARDWARE_FILE}" ]; then
+      ROBOT_HARDWARE=$(cat "${ROBOT_HARDWARE_FILE}")
+      export ROBOT_HARDWARE
+  else
+      echo "WARNING: robot_hardware file does not exist."
+      export ROBOT_HARDWARE="__NOTSET__"
   fi
 }
 
 
 configure_python(){
   # make the code discoverable by python
-  for d in $(find ${SOURCE_DIR} -mindepth 1 -maxdepth 1 -type d); do
+  for d in $(find "${SOURCE_DIR}" -mindepth 1 -maxdepth 1 -type d); do
     if [ "${DEBUG}" = "1" ]; then echo " > Adding ${d}/packages to PYTHONPATH"; fi
     export PYTHONPATH="${d}/packages:${PYTHONPATH}"
   done
