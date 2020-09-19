@@ -48,7 +48,7 @@ configure_vehicle(){
   if [ "${VEHICLE_NAME_IS_SET}" -eq "0" ]; then
     # vehicle name not set (assume vehicle is localhost)
     {
-      echo "127.0.0.1 ${VEHICLE_NAME} ${VEHICLE_NAME}.local" | dd of=/etc/hosts &>/dev/null
+      echo "127.0.0.1 localhost ${VEHICLE_NAME} ${VEHICLE_NAME}.local" | dd of=/etc/hosts &>/dev/null
     } || {
       echo "WARNING: Failed writing to /etc/hosts. Will continue anyway."
     }
