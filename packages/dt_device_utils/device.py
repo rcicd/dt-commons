@@ -2,7 +2,7 @@ import os
 import socket
 import logging
 
-from .constants import ETH0_DEVICE_MAC_FILE
+from .constants import ETH0_DEVICE_MAC_FILE, DeviceHardwareBrand
 
 # create logger
 logging.basicConfig()
@@ -33,3 +33,12 @@ def get_device_id() -> str:
 
 def get_device_hostname() -> str:
     return socket.gethostname()
+
+
+def get_device_hardware_brand() -> DeviceHardwareBrand:
+    hw = os.environ.get('ROBOT_HARDWARE', 'UNKNOWN')
+    if hw == 'raspberry_pi':
+        return DeviceHardwareBrand.RASPBERRY_PI
+    elif hw == 'jetson_nano':
+        return DeviceHardwareBrand.JETSON_NANO
+    return DeviceHardwareBrand.UNKNOWN
