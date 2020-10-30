@@ -137,6 +137,9 @@ debug "=> Setting up ROS environment..."
 configure_ROS
 debug "<= Done!\n"
 
+# mark this file as sourced
+DT_ENTRYPOINT_SOURCED=1
+export DT_ENTRYPOINT_SOURCED
 
 # if anything weird happens from now on, CONTINUE
 set +e

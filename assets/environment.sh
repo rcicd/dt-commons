@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# source entrypoint if it hasn't been done
+if [ "${DT_ENTRYPOINT_SOURCED}" != "1" ]; then
+    source /entrypoint.sh
+fi
+
 dt-terminate() {
     # send SIGINT signal to monitored process
     kill -INT $(pgrep -P $$) 2>/dev/null
