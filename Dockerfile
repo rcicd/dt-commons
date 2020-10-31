@@ -59,6 +59,9 @@ COPY ./assets/bin/. /usr/local/bin/
 COPY assets/entrypoint.sh /entrypoint.sh
 COPY assets/environment.sh /environment.sh
 
+# copy code setup script
+COPY assets/code/setup.bash /code/setup.bash
+
 # source environment on every bash session
 RUN echo "source /environment.sh" >> ~/.bashrc
 
