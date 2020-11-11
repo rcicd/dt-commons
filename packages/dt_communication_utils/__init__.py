@@ -1,6 +1,5 @@
-from .dt_communication_msg_t import dt_communication_msg_t
-from .communication import DTCommunicationGroup
+from .communication import DTRawCommunicationGroup
 
 __all__ = [
-    'dt_communication_msg_t'
+    'DTRawCommunicationGroup'
 ]

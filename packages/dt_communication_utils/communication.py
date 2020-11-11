@@ -1,16 +1,31 @@
-import threading
-from typing import Callable, Union
-
 import lcm
+import copy
+import time
+import socket
 import logging
-
+import threading
 from hashlib import sha256
 from ipaddress import IPv4Address
+from typing import Callable, Union, Optional
+from dataclasses import dataclass
+
+from .dt_communication_msg_t import dt_communication_msg_t
 
 logging.basicConfig()
 
+HOSTNAME = socket.gethostname()
+ANYBODY = "*"
 
-class DTCommunicationGroup(object):
+
+@dataclass
+class DTCommunicationMessageHeader(object):
+    timestamp: int
+    origin: str
+    destination: Optional[str]
+    txt: Optional[str]
+
+
+class DTRawCommunicationGroup(object):
 
     IP_NETWORK = "239.255.0.0/20"
     DEFAULT_PORT = "7667"
@@ -53,6 +68,10 @@ class DTCommunicationGroup(object):
     def is_shutdown(self):
         return self._is_shutdown
 
+    @property
+    def logger(self):
+        return self._logger
+
     def Subgroup(self, name: str, loglevel: int = None):
         if loglevel is None:
             loglevel = self._logger.level
@@ -82,10 +101,10 @@ class DTCommunicationGroup(object):
 
     def shutdown(self):
         # shutdown all publishers
-        for pub in self._publishers:
+        for pub in copy.copy(self._publishers):
             pub.shutdown()
         # shutdown all subscribers
-        for sub in self._subscribers:
+        for sub in copy.copy(self._subscribers):
             sub.shutdown()
         # ---
         self._is_shutdown = True
@@ -116,7 +135,7 @@ class DTCommunicationGroup(object):
 
 class DTCommunicationSubGroup(object):
 
-    def __init__(self, group: DTCommunicationGroup, name: str, loglevel: int = logging.WARNING):
+    def __init__(self, group: DTRawCommunicationGroup, name: str, loglevel: int = logging.WARNING):
         self._group = group
         self._name = '/' + name.strip('/')
         self._is_shutdown = False
@@ -132,6 +151,10 @@ class DTCommunicationSubGroup(object):
     @property
     def is_shutdown(self):
         return self._is_shutdown
+
+    @property
+    def logger(self):
+        return self._logger
 
     def Publisher(self):
         pub = DTCommunicationGroupPublisher(self, self._name)
@@ -161,10 +184,10 @@ class DTCommunicationSubGroup(object):
 
     def shutdown(self):
         # shutdown all publishers
-        for pub in self._publishers:
+        for pub in copy.copy(self._publishers):
             pub.shutdown()
         # shutdown all subscribers
-        for sub in self._subscribers:
+        for sub in copy.copy(self._subscribers):
             sub.shutdown()
         # ---
         self._is_shutdown = True
@@ -172,11 +195,35 @@ class DTCommunicationSubGroup(object):
 
 class DTCommunicationGroupPublisher(object):
 
-    def __init__(self, group: Union[DTCommunicationGroup, DTCommunicationSubGroup], topic: str):
+    def __init__(self, group: Union[DTRawCommunicationGroup, DTCommunicationSubGroup], topic: str):
         self._group = group
         self._topic = topic
 
-    def publish(self, msg: bytes):
+    def publish(self, data: bytes, destination: str = None, txt: str = None):
+        # check input (data)
+        if not isinstance(data, bytes):
+            raise ValueError(f'Field `data` must be of type `bytes`, '
+                             f'given `{str(type(data))}` instead')
+        # check input (destination)
+        if destination is not None and not isinstance(destination, str):
+            raise ValueError(f'Field `destination` must be of type `str`, '
+                             f'given `{str(type(destination))}` instead')
+        # check input (txt)
+        if txt is not None and not isinstance(txt, str):
+            raise ValueError(f'Field `txt` must be of type `str`, '
+                             f'given `{str(type(txt))}` instead')
+        # create empty message
+        msg = dt_communication_msg_t()
+        # populate message
+        msg.timestamp = time.time_ns() // 1000
+        msg.group = self._group.name
+        msg.origin = HOSTNAME
+        msg.destination = (destination or ANYBODY).strip()
+        msg.txt = txt or ""
+        msg.length = len(data)
+        msg.payload = data
+        # publish message
+        msg = msg.encode()
         self._group.handler.publish(self._topic, msg)
 
     def shutdown(self):
@@ -185,16 +232,37 @@ class DTCommunicationGroupPublisher(object):
 
 class DTCommunicationGroupSubscriber(object):
 
-    def __init__(self, group: Union[DTCommunicationGroup, DTCommunicationSubGroup],
+    def __init__(self, group: Union[DTRawCommunicationGroup, DTCommunicationSubGroup],
                  topic: str, callback: Callable):
         self._group = group
         self._topic = topic
         self._callback = callback
-        self._subscription_handler = self._group.handler.subscribe(self._topic, self._callback)
+        self._subscription_handler = \
+            self._group.handler.subscribe(self._topic, self.__inner_callback__)
 
     def shutdown(self):
         self._group.handler.unsubscribe(self._subscription_handler)
         self._group.remove_subscriber(self)
 
-    def __inner_callback__(self, topic, data):
-        pass
+    def __inner_callback__(self, _, data):
+        msg = None
+        try:
+            msg = dt_communication_msg_t.decode(data)
+        except ValueError:
+            pass
+        # check if the message was decoded successfully
+        if msg is None:
+            self._group.logger.warning("Received invalid message. Ignoring it.")
+            return
+        # make sure we are the indended destination of this message
+        if msg.destination not in [ANYBODY, HOSTNAME]:
+            return
+        # expose message metadata as a DTCommunicationMessageHeader object
+        header = DTCommunicationMessageHeader(
+            timestamp=msg.timestamp,
+            origin=msg.origin,
+            destination=msg.destination,
+            txt=msg.txt or None
+        )
+        # call user callback
+        self._callback(msg.payload, header)
