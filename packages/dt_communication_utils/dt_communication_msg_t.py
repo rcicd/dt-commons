@@ -10,17 +10,18 @@ except ImportError:
 import struct
 
 class dt_communication_msg_t(object):
-    __slots__ = ["timestamp", "group", "origin", "destination", "txt", "length", "payload"]
+    __slots__ = ["timestamp", "group", "origin", "destination", "metadata", "txt", "length", "payload"]
 
-    __typenames__ = ["int64_t", "string", "string", "string", "string", "int32_t", "byte"]
+    __typenames__ = ["int64_t", "string", "string", "string", "string", "string", "int32_t", "byte"]
 
-    __dimensions__ = [None, None, None, None, None, None, ["length"]]
+    __dimensions__ = [None, None, None, None, None, None, None, ["length"]]
 
     def __init__(self):
         self.timestamp = 0
         self.group = ""
         self.origin = ""
         self.destination = ""
+        self.metadata = ""
         self.txt = ""
         self.length = 0
         self.payload = ""
@@ -44,6 +45,10 @@ class dt_communication_msg_t(object):
         __destination_encoded = self.destination.encode('utf-8')
         buf.write(struct.pack('>I', len(__destination_encoded)+1))
         buf.write(__destination_encoded)
+        buf.write(b"\0")
+        __metadata_encoded = self.metadata.encode('utf-8')
+        buf.write(struct.pack('>I', len(__metadata_encoded)+1))
+        buf.write(__metadata_encoded)
         buf.write(b"\0")
         __txt_encoded = self.txt.encode('utf-8')
         buf.write(struct.pack('>I', len(__txt_encoded)+1))
@@ -71,6 +76,8 @@ class dt_communication_msg_t(object):
         self.origin = buf.read(__origin_len)[:-1].decode('utf-8', 'replace')
         __destination_len = struct.unpack('>I', buf.read(4))[0]
         self.destination = buf.read(__destination_len)[:-1].decode('utf-8', 'replace')
+        __metadata_len = struct.unpack('>I', buf.read(4))[0]
+        self.metadata = buf.read(__metadata_len)[:-1].decode('utf-8', 'replace')
         __txt_len = struct.unpack('>I', buf.read(4))[0]
         self.txt = buf.read(__txt_len)[:-1].decode('utf-8', 'replace')
         self.length = struct.unpack(">i", buf.read(4))[0]
@@ -81,7 +88,7 @@ class dt_communication_msg_t(object):
     _hash = None
     def _get_hash_recursive(parents):
         if dt_communication_msg_t in parents: return 0
-        tmphash = (0x5ae2c60b73e2d7ae) & 0xffffffffffffffff
+        tmphash = (0xf1e9d2def47c7527) & 0xffffffffffffffff
         tmphash  = (((tmphash<<1)&0xffffffffffffffff) + (tmphash>>63)) & 0xffffffffffffffff
         return tmphash
     _get_hash_recursive = staticmethod(_get_hash_recursive)
