@@ -2,7 +2,6 @@ import io
 import json
 from abc import abstractmethod
 
-import lcm
 import copy
 import time
 import socket
@@ -13,6 +12,8 @@ from hashlib import sha256
 from ipaddress import IPv4Address
 from typing import Callable, Union, Optional, Any
 from dataclasses import dataclass
+
+import lcm
 from genpy import Message as GenericROSMessage
 
 from .dt_communication_msg_t import dt_communication_msg_t
@@ -24,11 +25,49 @@ ANYBODY = "*"
 
 
 @dataclass
-class DTRawCommunicationMessageHeader(object):
-    timestamp: int
+class _DTRawCommunicationMessageHeader(object):
+    timestamp: Optional[int]
     origin: str
     destination: Optional[str]
     txt: Optional[str]
+
+
+class _TypedCommunicationGroup(object):
+
+    def __init__(self, msg_type: GenericROSMessage):
+        # check msg_type
+        if not inspect.isclass(msg_type):
+            raise ValueError(f"Field `msg_type` expected to be of type `class`, "
+                             f"got {msg_type.__class__.__name__} instead.")
+        # ---
+        self.MsgClass = msg_type
+
+    @property
+    @abstractmethod
+    def logger(self) -> logging.Logger:
+        pass
+
+    def encode(self, msg: Any) -> Optional[bytes]:
+        # make sure the message is in the right type
+        if not isinstance(msg, self.MsgClass):
+            self.logger.warning(f"Expected message of type `{self.MsgClass.__name__}`, "
+                                 f"got `{msg.__class__.__name__}` instead.")
+            return None
+        # ---
+        buff = io.BytesIO()
+        msg.serialize(buff)
+        return buff.getvalue()
+
+    def decode(self, data: bytes, metadata: dict) -> Optional[GenericROSMessage]:
+        # make sure the content type matches
+        if metadata['msg_type'] != self.MsgClass.__name__:
+            self.logger.warning(f"Expected message of type `{self.MsgClass.__name__}`, "
+                                 f"got `{metadata['msg_type']}` instead.")
+            return None
+        # decode
+        msg = self.MsgClass()
+        msg.deserialize(data)
+        return msg
 
 
 class DTRawCommunicationGroup(object):
@@ -86,28 +125,28 @@ class DTRawCommunicationGroup(object):
     def Subgroup(self, name: str, loglevel: int = None):
         if loglevel is None:
             loglevel = self._logger.level
-        return DTRawCommunicationSubGroup(self, name, loglevel)
+        return _DTRawCommunicationSubGroup(self, name, loglevel)
 
     def Publisher(self):
-        pub = DTRawCommunicationGroupPublisher(self, self.DEFAULT_CHANNEL)
+        pub = _DTRawCommunicationGroupPublisher(self, self.DEFAULT_CHANNEL)
         self.add_publisher(pub)
         return pub
 
     def Subscriber(self, callback: Callable):
-        sub = DTRawCommunicationGroupSubscriber(self, self.DEFAULT_CHANNEL, callback)
+        sub = _DTRawCommunicationGroupSubscriber(self, self.DEFAULT_CHANNEL, callback)
         self.add_subscriber(sub)
         return sub
 
-    def add_publisher(self, publisher: 'DTRawCommunicationGroupPublisher'):
+    def add_publisher(self, publisher: '_DTRawCommunicationGroupPublisher'):
         self._publishers.add(publisher)
 
-    def add_subscriber(self, subscriber: 'DTRawCommunicationGroupSubscriber'):
+    def add_subscriber(self, subscriber: '_DTRawCommunicationGroupSubscriber'):
         self._subscribers.add(subscriber)
 
-    def remove_publisher(self, publisher: 'DTRawCommunicationGroupPublisher'):
+    def remove_publisher(self, publisher: '_DTRawCommunicationGroupPublisher'):
         self._publishers.remove(publisher)
 
-    def remove_subscriber(self, subscriber: 'DTRawCommunicationGroupSubscriber'):
+    def remove_subscriber(self, subscriber: '_DTRawCommunicationGroupSubscriber'):
         self._subscribers.remove(subscriber)
 
     @staticmethod
@@ -152,7 +191,28 @@ class DTRawCommunicationGroup(object):
             pass
 
 
-class DTRawCommunicationSubGroup(object):
+class DTCommunicationGroup(_TypedCommunicationGroup, DTRawCommunicationGroup):
+
+    def __init__(self, name: str, msg_type: GenericROSMessage, ttl: int = 1,
+                 loglevel: int = logging.WARNING):
+        # call super constructors
+        _TypedCommunicationGroup.__init__(self, msg_type)
+        DTRawCommunicationGroup.__init__(self, name, ttl, loglevel)
+        self._metadata = {
+            "msg_type": msg_type.__name__
+        }
+
+    @property
+    def logger(self) -> logging.Logger:
+        return self._logger
+
+    def Subgroup(self, name: str, msg_type: GenericROSMessage, loglevel: int = None):
+        if loglevel is None:
+            loglevel = self._logger.level
+        return _DTCommunicationSubGroup(self, name, msg_type, loglevel)
+
+
+class _DTRawCommunicationSubGroup(object):
 
     def __init__(self, group: DTRawCommunicationGroup, name: str, loglevel: int = logging.WARNING):
         self._group = group
@@ -185,28 +245,28 @@ class DTRawCommunicationSubGroup(object):
         return self._group.metadata
 
     def Publisher(self):
-        pub = DTRawCommunicationGroupPublisher(self, self._topic)
+        pub = _DTRawCommunicationGroupPublisher(self, self._topic)
         self.add_publisher(pub)
         return pub
 
     def Subscriber(self, callback: Callable):
-        sub = DTRawCommunicationGroupSubscriber(self, self._topic, callback)
+        sub = _DTRawCommunicationGroupSubscriber(self, self._topic, callback)
         self.add_subscriber(sub)
         return sub
 
-    def add_publisher(self, publisher: 'DTRawCommunicationGroupPublisher'):
+    def add_publisher(self, publisher: '_DTRawCommunicationGroupPublisher'):
         self._publishers.add(publisher)
         self._group.add_publisher(publisher)
 
-    def add_subscriber(self, subscriber: 'DTRawCommunicationGroupSubscriber'):
+    def add_subscriber(self, subscriber: '_DTRawCommunicationGroupSubscriber'):
         self._subscribers.add(subscriber)
         self._group.add_subscriber(subscriber)
 
-    def remove_publisher(self, publisher: 'DTRawCommunicationGroupPublisher'):
+    def remove_publisher(self, publisher: '_DTRawCommunicationGroupPublisher'):
         self._publishers.remove(publisher)
         self._group.remove_publisher(publisher)
 
-    def remove_subscriber(self, subscriber: 'DTRawCommunicationGroupSubscriber'):
+    def remove_subscriber(self, subscriber: '_DTRawCommunicationGroupSubscriber'):
         self._subscribers.remove(subscriber)
         self._group.remove_subscriber(subscriber)
 
@@ -227,9 +287,9 @@ class DTRawCommunicationSubGroup(object):
         self._is_shutdown = True
 
 
-class DTRawCommunicationGroupPublisher(object):
+class _DTRawCommunicationGroupPublisher(object):
 
-    def __init__(self, group: Union[DTRawCommunicationGroup, DTRawCommunicationSubGroup],
+    def __init__(self, group: Union[DTRawCommunicationGroup, _DTRawCommunicationSubGroup],
                  topic: str):
         self._group = group
         self._topic = topic
@@ -270,9 +330,9 @@ class DTRawCommunicationGroupPublisher(object):
         self._group.remove_publisher(self)
 
 
-class DTRawCommunicationGroupSubscriber(object):
+class _DTRawCommunicationGroupSubscriber(object):
 
-    def __init__(self, group: Union[DTRawCommunicationGroup, DTRawCommunicationSubGroup],
+    def __init__(self, group: Union[DTRawCommunicationGroup, _DTRawCommunicationSubGroup],
                  topic: str, callback: Callable):
         self._group = group
         self._topic = topic
@@ -310,8 +370,8 @@ class DTRawCommunicationGroupSubscriber(object):
             return
         # parse metadata
         metadata = json.loads(msg.metadata)
-        # expose message metadata as a DTRawCommunicationMessageHeader object
-        header = DTRawCommunicationMessageHeader(
+        # expose message metadata as a _DTRawCommunicationMessageHeader object
+        header = _DTRawCommunicationMessageHeader(
             timestamp=msg.timestamp,
             origin=msg.origin,
             destination=msg.destination,
@@ -325,72 +385,13 @@ class DTRawCommunicationGroupSubscriber(object):
         self._callback(payload, header)
 
 
-class _TypedCommunicationGroup(object):
-
-    def __init__(self, msg_type: GenericROSMessage):
-        # check msg_type
-        if not inspect.isclass(msg_type):
-            raise ValueError(f"Field `msg_type` expected to be of type `class`, "
-                             f"got {msg_type.__class__.__name__} instead.")
-        # ---
-        self.MsgClass = msg_type
-
-    @property
-    @abstractmethod
-    def logger(self) -> logging.Logger:
-        pass
-
-    def encode(self, msg: Any) -> Optional[bytes]:
-        # make sure the message is in the right type
-        if not isinstance(msg, self.MsgClass):
-            self.logger.warning(f"Expected message of type `{self.MsgClass.__name__}`, "
-                                 f"got `{msg.__class__.__name__}` instead.")
-            return None
-        # ---
-        buff = io.BytesIO()
-        msg.serialize(buff)
-        return buff.getvalue()
-
-    def decode(self, data: bytes, metadata: dict) -> Optional[GenericROSMessage]:
-        # make sure the content type matches
-        if metadata['msg_type'] != self.MsgClass.__name__:
-            self.logger.warning(f"Expected message of type `{self.MsgClass.__name__}`, "
-                                 f"got `{metadata['msg_type']}` instead.")
-            return None
-        # decode
-        msg = self.MsgClass()
-        msg.deserialize(data)
-        return msg
-
-
-class DTCommunicationGroup(_TypedCommunicationGroup, DTRawCommunicationGroup):
-
-    def __init__(self, name: str, msg_type: GenericROSMessage, ttl: int = 1,
-                 loglevel: int = logging.WARNING):
-        # call super constructors
-        _TypedCommunicationGroup.__init__(self, msg_type)
-        DTRawCommunicationGroup.__init__(self, name, ttl, loglevel)
-        self._metadata = {
-            "msg_type": msg_type.__name__
-        }
-
-    @property
-    def logger(self) -> logging.Logger:
-        return self._logger
-
-    def Subgroup(self, name: str, msg_type: GenericROSMessage, loglevel: int = None):
-        if loglevel is None:
-            loglevel = self._logger.level
-        return DTCommunicationSubGroup(self, name, msg_type, loglevel)
-
-
-class DTCommunicationSubGroup(_TypedCommunicationGroup, DTRawCommunicationSubGroup):
+class _DTCommunicationSubGroup(_TypedCommunicationGroup, _DTRawCommunicationSubGroup):
 
     def __init__(self, group: DTCommunicationGroup, name: str, msg_type: GenericROSMessage,
                  loglevel: int = logging.WARNING):
         # call super constructors
         _TypedCommunicationGroup.__init__(self, msg_type)
-        DTRawCommunicationSubGroup.__init__(self, group, name, loglevel)
+        _DTRawCommunicationSubGroup.__init__(self, group, name, loglevel)
         self._metadata = {
             "msg_type": msg_type.__name__
         }
