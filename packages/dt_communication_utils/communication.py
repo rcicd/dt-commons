@@ -1,5 +1,7 @@
 import io
 import json
+from abc import abstractmethod
+
 import lcm
 import copy
 import time
@@ -277,6 +279,7 @@ class DTRawCommunicationGroupSubscriber(object):
         self._callback = callback
         self._subscription_handler = \
             self._group.handler.subscribe(self._topic, self.__inner_callback__)
+        self._collisions = set()
 
     def shutdown(self):
         self._group.handler.unsubscribe(self._subscription_handler)
@@ -291,6 +294,16 @@ class DTRawCommunicationGroupSubscriber(object):
         # check if the message was decoded successfully
         if msg is None:
             self._group.logger.warning("Received invalid message. Ignoring it.")
+            return
+        # make sure there is no group collision here
+        if msg.group != self._group.name:
+            if msg.group not in self._collisions:
+                self._group.logger.warning(
+                    f"Collision detected between the groups `{msg.group}` "
+                    f"and `{self._group.name}`. If you are the administrator, "
+                    f"we suggest you increase the IP address pool dedicate to "
+                    f"UDP Multicast.")
+                self._collisions.add(msg.group)
             return
         # make sure we are the intended destination of this message
         if msg.destination not in [ANYBODY, HOSTNAME]:
@@ -312,31 +325,26 @@ class DTRawCommunicationGroupSubscriber(object):
         self._callback(payload, header)
 
 
-class DTCommunicationGroup(DTRawCommunicationGroup):
+class _TypedCommunicationGroup(object):
 
-    def __init__(self, name: str, msg_type: GenericROSMessage, ttl: int = 1,
-                 loglevel: int = logging.WARNING):
-        # ---
+    def __init__(self, msg_type: GenericROSMessage):
+        # check msg_type
         if not inspect.isclass(msg_type):
             raise ValueError(f"Field `msg_type` expected to be of type `class`, "
-                             f"got {str(type(msg_type))} instead.")
+                             f"got {msg_type.__class__.__name__} instead.")
+        # ---
         self.MsgClass = msg_type
-        # call super constructor
-        super(DTCommunicationGroup, self).__init__(name, ttl, loglevel)
-        self._metadata = {
-            "msg_type": msg_type.__name__
-        }
 
-    def Subgroup(self, name: str, loglevel: int = None):
-        if loglevel is None:
-            loglevel = self._logger.level
-        return DTRawCommunicationSubGroup(self, name, loglevel)
+    @property
+    @abstractmethod
+    def logger(self) -> logging.Logger:
+        pass
 
     def encode(self, msg: Any) -> Optional[bytes]:
         # make sure the message is in the right type
         if not isinstance(msg, self.MsgClass):
-            self._logger.warning(f"Expected message of type `{self.MsgClass.__name__}`, "
-                                 f"got `{str(type(msg))}` instead.")
+            self.logger.warning(f"Expected message of type `{self.MsgClass.__name__}`, "
+                                 f"got `{msg.__class__.__name__}` instead.")
             return None
         # ---
         buff = io.BytesIO()
@@ -346,10 +354,51 @@ class DTCommunicationGroup(DTRawCommunicationGroup):
     def decode(self, data: bytes, metadata: dict) -> Optional[GenericROSMessage]:
         # make sure the content type matches
         if metadata['msg_type'] != self.MsgClass.__name__:
-            self._logger.warning(f"Expected message of type `{self.MsgClass.__name__}`, "
+            self.logger.warning(f"Expected message of type `{self.MsgClass.__name__}`, "
                                  f"got `{metadata['msg_type']}` instead.")
             return None
         # decode
         msg = self.MsgClass()
         msg.deserialize(data)
         return msg
+
+
+class DTCommunicationGroup(_TypedCommunicationGroup, DTRawCommunicationGroup):
+
+    def __init__(self, name: str, msg_type: GenericROSMessage, ttl: int = 1,
+                 loglevel: int = logging.WARNING):
+        # call super constructors
+        _TypedCommunicationGroup.__init__(self, msg_type)
+        DTRawCommunicationGroup.__init__(self, name, ttl, loglevel)
+        self._metadata = {
+            "msg_type": msg_type.__name__
+        }
+
+    @property
+    def logger(self) -> logging.Logger:
+        return self._logger
+
+    def Subgroup(self, name: str, msg_type: GenericROSMessage, loglevel: int = None):
+        if loglevel is None:
+            loglevel = self._logger.level
+        return DTCommunicationSubGroup(self, name, msg_type, loglevel)
+
+
+class DTCommunicationSubGroup(_TypedCommunicationGroup, DTRawCommunicationSubGroup):
+
+    def __init__(self, group: DTCommunicationGroup, name: str, msg_type: GenericROSMessage,
+                 loglevel: int = logging.WARNING):
+        # call super constructors
+        _TypedCommunicationGroup.__init__(self, msg_type)
+        DTRawCommunicationSubGroup.__init__(self, group, name, loglevel)
+        self._metadata = {
+            "msg_type": msg_type.__name__
+        }
+
+    @property
+    def logger(self) -> logging.Logger:
+        return self._logger
+
+    @property
+    def metadata(self):
+        return self._metadata
