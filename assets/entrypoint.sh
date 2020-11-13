@@ -6,6 +6,8 @@ ROBOT_TYPE_FILE=${CONFIG_DIR}/robot_type
 ROBOT_CONFIGURATION_FILE=${CONFIG_DIR}/robot_configuration
 ROBOT_HARDWARE_FILE=${CONFIG_DIR}/robot_hardware
 
+echo "==> Entrypoint"
+
 # if anything weird happens from now on, STOP
 set -e
 
@@ -156,6 +158,7 @@ export DT_ENTRYPOINT_SOURCED
 # if anything weird happens from now on, CONTINUE
 set +e
 
+echo "<== Entrypoint"
 
 # reuse DT_LAUNCHER as CMD if the var is set and the first argument is `--`
 if [ ${#DT_LAUNCHER} -gt 0 ] && [ "$1" == "--" ]; then

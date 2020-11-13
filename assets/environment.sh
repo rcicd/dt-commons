@@ -31,7 +31,7 @@ dt-launchfile-init() {
     set -e
     # register signal handlers
     dt-register-signals
-    echo "=> Launching app..."
+    echo "==> Launching app..."
 }
 
 dt-launchfile-join() {
@@ -39,7 +39,7 @@ dt-launchfile-join() {
     dt-join
     # wait for stdout to flush, then announce app termination
     sleep 0.5
-    printf "<= App terminated!\n"
+    printf "<== App terminated!\n"
 }
 
 dt-exec() {
