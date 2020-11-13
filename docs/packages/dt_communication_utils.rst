@@ -102,6 +102,9 @@ to receive a message from the same group.
     subscriber = group.Subscriber(callback)
 
 
+..  include:: dt_communication_utils/troubleshooting.rst
+
+
 Python Classes
 --------------
 
