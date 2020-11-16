@@ -1,8 +1,13 @@
 import os
 import socket
 import logging
+from typing import Optional
 
-from .constants import ETH0_DEVICE_MAC_FILE, DeviceHardwareBrand
+from .constants import \
+    ETH0_DEVICE_MAC_FILE, \
+    CONFIG_DIR, \
+    DeviceHardwareBrand
+
 
 # create logger
 logging.basicConfig()
@@ -42,3 +47,27 @@ def get_device_hardware_brand() -> DeviceHardwareBrand:
     elif hw == 'jetson_nano':
         return DeviceHardwareBrand.JETSON_NANO
     return DeviceHardwareBrand.UNKNOWN
+
+
+def get_device_tag_id() -> Optional[int]:
+    """
+    Reads the ID of the (April) Tag attached to the robot from disk and returns it as an int.
+
+    :return: Robot's tag ID if it is set, None if the ID is not set.
+    :rtype: Optional[int]
+    """
+    tag_id_filename = os.path.join(CONFIG_DIR, 'robot_tag_id')
+    tag_id = None
+    # try to read the tag from file and parse it as int
+    if os.path.isfile(tag_id_filename):
+        try:
+            with open(tag_id_filename, 'rt') as fin:
+                tag_id = int(fin.read().strip().lower())
+        except BaseException as e:
+            logger.error(f"Could not read the tag ID from file `{tag_id_filename}`. "
+                         f"The error reads: {str(e)}")
+    # negative values turn into None
+    if tag_id is None or tag_id < 0:
+        return None
+    # return tag ID
+    return tag_id
