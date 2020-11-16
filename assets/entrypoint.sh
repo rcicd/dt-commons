@@ -6,6 +6,8 @@ ROBOT_TYPE_FILE=${CONFIG_DIR}/robot_type
 ROBOT_CONFIGURATION_FILE=${CONFIG_DIR}/robot_configuration
 ROBOT_HARDWARE_FILE=${CONFIG_DIR}/robot_hardware
 
+echo "==> Entrypoint"
+
 # if anything weird happens from now on, STOP
 set -e
 
@@ -55,30 +57,42 @@ configure_vehicle(){
   fi
 
   # robot_type
-  if [ -f "${ROBOT_TYPE_FILE}" ]; then
-      ROBOT_TYPE=$(cat "${ROBOT_TYPE_FILE}")
-      export ROBOT_TYPE
+  if [ ${#ROBOT_TYPE} -le 0 ]; then
+      if [ -f "${ROBOT_TYPE_FILE}" ]; then
+          ROBOT_TYPE=$(cat "${ROBOT_TYPE_FILE}")
+          export ROBOT_TYPE
+      else
+          echo "WARNING: robot_type file does not exist. Using 'duckiebot' as default type."
+          export ROBOT_TYPE="duckiebot"
+      fi
   else
-      echo "WARNING: robot_type file does not exist. Using 'duckiebot' as default type."
-      export ROBOT_TYPE="duckiebot"
+      echo "INFO: ROBOT_TYPE is externally set to '${ROBOT_TYPE}'."
   fi
 
   # robot_configuration
-  if [ -f "${ROBOT_CONFIGURATION_FILE}" ]; then
-      ROBOT_CONFIGURATION=$(cat "${ROBOT_CONFIGURATION_FILE}")
-      export ROBOT_CONFIGURATION
+  if [ ${#ROBOT_CONFIGURATION} -le 0 ]; then
+      if [ -f "${ROBOT_CONFIGURATION_FILE}" ]; then
+          ROBOT_CONFIGURATION=$(cat "${ROBOT_CONFIGURATION_FILE}")
+          export ROBOT_CONFIGURATION
+      else
+          echo "WARNING: robot_configuration file does not exist."
+          export ROBOT_CONFIGURATION="__NOTSET__"
+      fi
   else
-      echo "WARNING: robot_configuration file does not exist."
-      export ROBOT_CONFIGURATION="__NOTSET__"
+      echo "INFO: ROBOT_CONFIGURATION is externally set to '${ROBOT_CONFIGURATION}'."
   fi
 
   # robot_hardware
-  if [ -f "${ROBOT_HARDWARE_FILE}" ]; then
-      ROBOT_HARDWARE=$(cat "${ROBOT_HARDWARE_FILE}")
-      export ROBOT_HARDWARE
+  if [ ${#ROBOT_HARDWARE} -le 0 ]; then
+      if [ -f "${ROBOT_HARDWARE_FILE}" ]; then
+          ROBOT_HARDWARE=$(cat "${ROBOT_HARDWARE_FILE}")
+          export ROBOT_HARDWARE
+      else
+          echo "WARNING: robot_hardware file does not exist."
+          export ROBOT_HARDWARE="__NOTSET__"
+      fi
   else
-      echo "WARNING: robot_hardware file does not exist."
-      export ROBOT_HARDWARE="__NOTSET__"
+      echo "INFO: ROBOT_HARDWARE is externally set to '${ROBOT_HARDWARE}'."
   fi
 }
 
@@ -147,6 +161,7 @@ export DT_ENTRYPOINT_SOURCED
 # if anything weird happens from now on, CONTINUE
 set +e
 
+echo "<== Entrypoint"
 
 # reuse DT_LAUNCHER as CMD if the var is set and the first argument is `--`
 if [ ${#DT_LAUNCHER} -gt 0 ] && [ "$1" == "--" ]; then
