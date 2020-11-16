@@ -3,12 +3,14 @@ from .communication import \
     DTCommunicationGroup, \
     DTCommunicationPublisher, \
     DTCommunicationSubscriber, \
-    DTCommunicationMessageHeader
+    DTCommunicationMessageHeader, \
+    ANYBODY_BUT_ME
 
 __all__ = [
     'DTRawCommunicationGroup',
     'DTCommunicationGroup',
     'DTCommunicationPublisher',
     'DTCommunicationSubscriber',
-    'DTCommunicationMessageHeader'
+    'DTCommunicationMessageHeader',
+    'ANYBODY_BUT_ME'
 ]

@@ -22,6 +22,7 @@ logging.basicConfig()
 
 HOSTNAME = socket.gethostname()
 ANYBODY = "*"
+ANYBODY_BUT_ME = f"~{HOSTNAME}"
 
 
 @dataclass
@@ -40,6 +41,9 @@ class DTCommunicationMessageHeader(object):
     origin: str
     destination: Optional[str]
     txt: Optional[str]
+
+    def i_sent_this(self):
+        return self.origin == HOSTNAME
 
 
 class _TypedCommunicationGroup(object):
@@ -653,7 +657,7 @@ class DTCommunicationPublisher(object):
         self._group = group
         self._topic = topic
 
-    def publish(self, data: Any, destination: str = None, txt: str = None):
+    def publish(self, data: Any, destination: str = ANYBODY, txt: str = None):
         """
         Publishes a new message.
 
@@ -751,6 +755,9 @@ class DTCommunicationSubscriber(object):
                     f"we suggest you increase the IP address pool dedicate to "
                     f"UDP Multicast.")
                 self._collisions.add(msg.group)
+            return
+        # make sure we are not supposed to receive this message
+        if msg.destination == ANYBODY_BUT_ME:
             return
         # make sure we are the intended destination of this message
         if msg.destination not in [ANYBODY, HOSTNAME]:
