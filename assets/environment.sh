@@ -31,7 +31,7 @@ dt-launchfile-init() {
     set -e
     # register signal handlers
     dt-register-signals
-    if ["$1" != "--quiet" ]; then
+    if [ "$1" != "--quiet" ]; then
         echo "==> Launching app..."
     fi
 }
@@ -41,7 +41,7 @@ dt-launchfile-join() {
     dt-join
     # wait for stdout to flush, then announce app termination
     sleep 0.5
-    if ["$1" != "--quiet" ]; then
+    if [ "$1" != "--quiet" ]; then
         printf "<== App terminated!\n"
     fi
 }
