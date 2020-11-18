@@ -760,7 +760,9 @@ class DTCommunicationSubscriber(object):
         if msg.destination == ANYBODY_BUT_ME:
             return
         # make sure we are the intended destination of this message
-        if msg.destination not in [ANYBODY, HOSTNAME]:
+        if msg.destination != ANYBODY \
+                and not msg.destination.startswith('~') \
+                and msg.destination != HOSTNAME:
             return
         # parse metadata
         metadata = json.loads(msg.metadata)
