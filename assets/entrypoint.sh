@@ -5,6 +5,7 @@ CONFIG_DIR=/data/config
 ROBOT_TYPE_FILE=${CONFIG_DIR}/robot_type
 ROBOT_CONFIGURATION_FILE=${CONFIG_DIR}/robot_configuration
 ROBOT_HARDWARE_FILE=${CONFIG_DIR}/robot_hardware
+ROBOT_TAG_ID_FILE=${CONFIG_DIR}/robot_tag_id
 
 echo "==> Entrypoint"
 
@@ -21,7 +22,7 @@ export DT_MODULE_INSTANCE
 
 debug(){
   if [ "${DEBUG}" = "1" ]; then
-    echo "$1";
+    echo "DEBUG: $1";
   fi
 }
 
@@ -60,6 +61,7 @@ configure_vehicle(){
   if [ ${#ROBOT_TYPE} -le 0 ]; then
       if [ -f "${ROBOT_TYPE_FILE}" ]; then
           ROBOT_TYPE=$(cat "${ROBOT_TYPE_FILE}")
+          debug "ROBOT_TYPE[${ROBOT_TYPE_FILE}]: '${ROBOT_TYPE}'"
           export ROBOT_TYPE
       else
           echo "WARNING: robot_type file does not exist. Using 'duckiebot' as default type."
@@ -73,6 +75,7 @@ configure_vehicle(){
   if [ ${#ROBOT_CONFIGURATION} -le 0 ]; then
       if [ -f "${ROBOT_CONFIGURATION_FILE}" ]; then
           ROBOT_CONFIGURATION=$(cat "${ROBOT_CONFIGURATION_FILE}")
+          debug "ROBOT_CONFIGURATION[${ROBOT_CONFIGURATION_FILE}]: '${ROBOT_CONFIGURATION}'"
           export ROBOT_CONFIGURATION
       else
           echo "WARNING: robot_configuration file does not exist."
@@ -86,6 +89,7 @@ configure_vehicle(){
   if [ ${#ROBOT_HARDWARE} -le 0 ]; then
       if [ -f "${ROBOT_HARDWARE_FILE}" ]; then
           ROBOT_HARDWARE=$(cat "${ROBOT_HARDWARE_FILE}")
+          debug "ROBOT_HARDWARE[${ROBOT_HARDWARE_FILE}]: '${ROBOT_HARDWARE}'"
           export ROBOT_HARDWARE
       else
           echo "WARNING: robot_hardware file does not exist."
@@ -93,6 +97,25 @@ configure_vehicle(){
       fi
   else
       echo "INFO: ROBOT_HARDWARE is externally set to '${ROBOT_HARDWARE}'."
+  fi
+
+  # robot_tag_id
+  if [ ${#ROBOT_TAG_ID} -le 0 ]; then
+      if [ -f "${ROBOT_TAG_ID_FILE}" ]; then
+          ROBOT_TAG_ID=$(cat "${ROBOT_TAG_ID_FILE}")
+          if [[ "${ROBOT_TAG_ID}" -le 0 ]]; then
+              echo "WARNING: robot_tag_id file has an invalid value, '${ROBOT_TAG_ID}'."
+              export ROBOT_TAG_ID="__NOTSET__"
+          else
+              debug "ROBOT_TAG_ID[${ROBOT_TAG_ID_FILE}]: '${ROBOT_TAG_ID}'"
+              export ROBOT_TAG_ID
+          fi
+      else
+          echo "WARNING: robot_tag_id file does not exist."
+          export ROBOT_TAG_ID="__NOTSET__"
+      fi
+  else
+      echo "INFO: ROBOT_TAG_ID is externally set to '${ROBOT_TAG_ID}'."
   fi
 }
 
