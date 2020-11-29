@@ -121,17 +121,23 @@ configure_vehicle(){
 
   # robot_map_name
   if [ ${#ROBOT_MAP_NAME} -le 0 ]; then
-      if [ -f "${ROBOT_MAP_NAME_FILE}" ]; then
-          ROBOT_MAP_NAME=$(cat "${ROBOT_MAP_NAME_FILE}")
-          if [ ${#ROBOT_MAP_NAME} -le 0 ]; then
-              export ROBOT_MAP_NAME="__NOTSET__"
-          else
-              debug "ROBOT_MAP_NAME[${ROBOT_MAP_NAME_FILE}]: '${ROBOT_MAP_NAME}'"
-              export ROBOT_MAP_NAME
-          fi
+      if [ "${ROBOT_TYPE}" = "duckietown" ]; then
+          # robots of type `duckietown` belong to themselves
+          export ROBOT_MAP_NAME="${VEHICLE_NAME}"
       else
-          echo "WARNING: robot_map_name file does not exist."
-          export ROBOT_MAP_NAME="__NOTSET__"
+          # any other robot type can declare a map name in a file
+          if [ -f "${ROBOT_MAP_NAME_FILE}" ]; then
+              ROBOT_MAP_NAME=$(cat "${ROBOT_MAP_NAME_FILE}")
+              if [ ${#ROBOT_MAP_NAME} -le 0 ]; then
+                  export ROBOT_MAP_NAME="__NOTSET__"
+              else
+                  debug "ROBOT_MAP_NAME[${ROBOT_MAP_NAME_FILE}]: '${ROBOT_MAP_NAME}'"
+                  export ROBOT_MAP_NAME
+              fi
+          else
+              echo "WARNING: robot_map_name file does not exist."
+              export ROBOT_MAP_NAME="__NOTSET__"
+          fi
       fi
   else
       echo "INFO: ROBOT_MAP_NAME is externally set to '${ROBOT_MAP_NAME}'."
