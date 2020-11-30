@@ -5,8 +5,6 @@ CONFIG_DIR=/data/config
 ROBOT_TYPE_FILE=${CONFIG_DIR}/robot_type
 ROBOT_CONFIGURATION_FILE=${CONFIG_DIR}/robot_configuration
 ROBOT_HARDWARE_FILE=${CONFIG_DIR}/robot_hardware
-ROBOT_TAG_ID_FILE=${CONFIG_DIR}/robot_tag_id
-ROBOT_MAP_NAME_FILE=${CONFIG_DIR}/robot_map_name
 
 echo "==> Entrypoint"
 
@@ -98,49 +96,6 @@ configure_vehicle(){
       fi
   else
       echo "INFO: ROBOT_HARDWARE is externally set to '${ROBOT_HARDWARE}'."
-  fi
-
-  # robot_tag_id
-  if [ ${#ROBOT_TAG_ID} -le 0 ]; then
-      if [ -f "${ROBOT_TAG_ID_FILE}" ]; then
-          ROBOT_TAG_ID=$(cat "${ROBOT_TAG_ID_FILE}")
-          if [[ "${ROBOT_TAG_ID}" -le 0 ]]; then
-              echo "WARNING: robot_tag_id file has an invalid value, '${ROBOT_TAG_ID}'."
-              export ROBOT_TAG_ID="__NOTSET__"
-          else
-              debug "ROBOT_TAG_ID[${ROBOT_TAG_ID_FILE}]: '${ROBOT_TAG_ID}'"
-              export ROBOT_TAG_ID
-          fi
-      else
-          echo "WARNING: robot_tag_id file does not exist."
-          export ROBOT_TAG_ID="__NOTSET__"
-      fi
-  else
-      echo "INFO: ROBOT_TAG_ID is externally set to '${ROBOT_TAG_ID}'."
-  fi
-
-  # robot_map_name
-  if [ ${#ROBOT_MAP_NAME} -le 0 ]; then
-      if [ "${ROBOT_TYPE}" = "duckietown" ]; then
-          # robots of type `duckietown` belong to themselves
-          export ROBOT_MAP_NAME="${VEHICLE_NAME}"
-      else
-          # any other robot type can declare a map name in a file
-          if [ -f "${ROBOT_MAP_NAME_FILE}" ]; then
-              ROBOT_MAP_NAME=$(cat "${ROBOT_MAP_NAME_FILE}")
-              if [ ${#ROBOT_MAP_NAME} -le 0 ]; then
-                  export ROBOT_MAP_NAME="__NOTSET__"
-              else
-                  debug "ROBOT_MAP_NAME[${ROBOT_MAP_NAME_FILE}]: '${ROBOT_MAP_NAME}'"
-                  export ROBOT_MAP_NAME
-              fi
-          else
-              echo "WARNING: robot_map_name file does not exist."
-              export ROBOT_MAP_NAME="__NOTSET__"
-          fi
-      fi
-  else
-      echo "INFO: ROBOT_MAP_NAME is externally set to '${ROBOT_MAP_NAME}'."
   fi
 }
 
