@@ -216,6 +216,11 @@ set +e
 
 echo "<== Entrypoint"
 
+# exit if this file is just being sourced
+if [ "$0" != "${BASH_SOURCE[0]}" ]; then
+    return
+fi
+
 # reuse DT_LAUNCHER as CMD if the var is set and the first argument is `--`
 if [ ${#DT_LAUNCHER} -gt 0 ] && [ "$1" == "--" ]; then
   shift

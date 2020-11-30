@@ -77,7 +77,6 @@ COPY assets/code/setup.bash /code/setup.bash
 RUN echo "source /environment.sh" >> ~/.bashrc
 
 # configure entrypoint
-COPY assets/entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 
 # install launcher scripts
