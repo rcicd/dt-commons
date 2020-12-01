@@ -106,6 +106,13 @@ configure_python(){
     debug " > Adding ${d}/packages to PYTHONPATH"
     export PYTHONPATH="${d}/packages:${PYTHONPATH}"
   done
+  # make the code discoverable by python
+  if [ ${#CATKIN_WS_DIR} -gt 0 ] && [ -d "${CATKIN_WS_DIR}/src" ]; then
+      for d in $(find "${CATKIN_WS_DIR}/src" -mindepth 1 -maxdepth 1 -type d); do
+        debug " > Adding ${d}/packages to PYTHONPATH"
+        export PYTHONPATH="${d}/packages:${PYTHONPATH}"
+      done
+  fi
 }
 
 
