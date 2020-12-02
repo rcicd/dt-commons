@@ -19,11 +19,16 @@ device within your LAN will not be received, and similarly, no messages leaving 
 will ever reach any device on your LAN.
 
 This can be fixed by explicitly telling your kernel which interface should be responsible
-for UDPm traffic. You can do so by running the command,
+for Duckietown UDPm traffic. You can do so by running the command,
 
 ..  code-block:: bash
 
-    sudo route add -net 224.0.0.0 netmask 240.0.0.0 dev DEVICE
+    sudo route add -net 239.255.0.0 netmask 255.255.240.0 dev DEVICE
 
 where you replace ``DEVICE`` with the network interface your LAN is connected to (e.g., ``eth1``
 in the example above).
+
+.. note::
+    UDPm networks can take IP addresses from the range ``224/4``, which means any IP address
+    between ``224.0.0.0`` and ``239.255.255.255``. Duckietown spans communication groups
+    across the range ``239.255.0/20`` hence the route above only routes Duckietown UDPm traffic.
