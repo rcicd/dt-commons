@@ -9,17 +9,16 @@ class RobotType(IntEnum):
     DUCKIETOWN = 4
     DUCKIEDRONE = 5
 
-    _from_string = {
-        '__NOTSET__': UNKNOWN,
-        'duckiebot': DUCKIEBOT,
-        'watchtower': WATCHTOWER,
-        'traffic_light': TRAFFIC_LIGHT,
-        'duckietown': DUCKIETOWN,
-        'duckiedrone': DUCKIEDRONE
-    }
-
     @classmethod
     def from_string(cls, rtype: str) -> 'RobotType':
-        if rtype in cls._from_string:
-            return cls._from_string[rtype]
+        _from_string = {
+            '__NOTSET__': RobotType.UNKNOWN,
+            'duckiebot': RobotType.DUCKIEBOT,
+            'watchtower': RobotType.WATCHTOWER,
+            'traffic_light': RobotType.TRAFFIC_LIGHT,
+            'duckietown': RobotType.DUCKIETOWN,
+            'duckiedrone': RobotType.DUCKIEDRONE
+        }
+        if rtype in _from_string:
+            return _from_string[rtype]
         return RobotType.UNKNOWN
