@@ -147,7 +147,7 @@ class DTRawCommunicationGroup(object):
         self._subscribers = set()
         self._metadata = {}
         # create LCM handler
-        self._logger.debug(f'Creating LCM handler on URL: `{self._url}`')
+        self._logger.info(f'Creating LCM handler on URL: `{self._url}`')
         self._lcm = lcm.LCM(self._url)
         self._mailman = threading.Thread(target=self._spin)
         self._mailman.start()
