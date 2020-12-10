@@ -165,6 +165,16 @@ class DTRawCommunicationGroup(object):
         return self._id
 
     @property
+    def url(self) -> str:
+        """
+        The underlying UDPm LCM url used by this group.
+
+        :return: Group's LCM url.
+        :rtype:  str
+        """
+        return self._url
+
+    @property
     def name(self) -> str:
         """
         Unique group's name.
