@@ -137,17 +137,10 @@ configure_ROS(){
     fi
   done
 
-  # TODO: disabled because it causes issues, should revisit
-#  # configure ROS IP (do not use IPs starting with 172., those are Docker internal IPs)
-#  for IP in $(hostname -I 2>/dev/null); do
-#      if echo "${IP}" | grep -q -v "^172\."; then
-#          export ROS_IP=${IP}
-#      fi
-#  done
-
-  # configure ROS IP
-  CONTAINER_IP=$(hostname -I 2>/dev/null | cut -d " " -f 1)
-  export ROS_IP=${CONTAINER_IP}
+  # configure ROS_HOSTNAME
+  MACHINE_HOSTNAME="$(hostname).local"
+  debug "Setting ROS_HOSTNAME to '${MACHINE_HOSTNAME}'"
+  export ROS_HOSTNAME=${MACHINE_HOSTNAME}
 
   # configure ROS MASTER URI
   if [ "${ROS_MASTER_URI_IS_SET}" -eq "0" ]; then
