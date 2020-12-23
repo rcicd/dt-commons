@@ -56,6 +56,13 @@ configure_vehicle(){
     }
   fi
 
+  # configure (fake) mDNS
+  {
+    echo "127.0.0.1 localhost $(hostname) $(hostname).local" >> /etc/hosts
+  } || {
+    echo "WARNING: Failed writing to /etc/hosts. Will continue anyway."
+  }
+
   # robot_type
   if [ ${#ROBOT_TYPE} -le 0 ]; then
       if [ -f "${ROBOT_TYPE_FILE}" ]; then
