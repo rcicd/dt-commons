@@ -5,6 +5,7 @@ CONFIG_DIR=/data/config
 ROBOT_TYPE_FILE=${CONFIG_DIR}/robot_type
 ROBOT_CONFIGURATION_FILE=${CONFIG_DIR}/robot_configuration
 ROBOT_HARDWARE_FILE=${CONFIG_DIR}/robot_hardware
+DOCKER_BRIDGE_IP_RANGE=(172.17.0.0 172.31.255.255)
 
 echo "==> Entrypoint"
 
@@ -26,6 +27,24 @@ debug(){
 }
 
 
+is_nethost(){
+  ipval(){
+    # returns the integer representation of an IP arg passed in ascii notation (x.y.z.w)
+    IP=$1; IPNUM=0
+    for (( i=0 ; i<4 ; ++i )); do
+      ((IPNUM+=${IP%%.*}*$((256**$((3-${i}))))))
+      IP=${IP#*.}
+    done
+    echo $IPNUM
+  }
+  GATEWAY=$(route -n | grep 'UG[ \t]' | awk '{print $2}')
+  GATEWAY_INT=$(ipval "${GATEWAY}")
+  BRIDGE_MIN_INT=$(ipval "${DOCKER_BRIDGE_IP_RANGE[0]}")
+  BRIDGE_MAX_INT=$(ipval "${DOCKER_BRIDGE_IP_RANGE[1]}")
+  ! [[ ${GATEWAY_INT} -ge ${BRIDGE_MIN_INT} && ${GATEWAY_INT} -le ${BRIDGE_MAX_INT} ]]
+}
+
+
 configure_vehicle(){
   # check the mandatory arguments
   VEHICLE_NAME_IS_SET=1
@@ -40,7 +59,7 @@ configure_vehicle(){
   if [ ${#VEHICLE_IP} -ne 0 ]; then
     echo "The environment variable VEHICLE_IP is set to '${VEHICLE_IP}'. Adding to /etc/hosts."
     {
-      echo "${VEHICLE_IP} ${VEHICLE_NAME} ${VEHICLE_NAME}.local" | dd of=/etc/hosts &>/dev/null
+      echo "${VEHICLE_IP} ${VEHICLE_NAME} ${VEHICLE_NAME}.local" >> /etc/hosts
     } || {
       echo "WARNING: Failed writing to /etc/hosts. Will continue anyway."
     }
@@ -50,7 +69,7 @@ configure_vehicle(){
   if [ "${VEHICLE_NAME_IS_SET}" -eq "0" ]; then
     # vehicle name not set (assume vehicle is localhost)
     {
-      echo "127.0.0.1 localhost ${VEHICLE_NAME} ${VEHICLE_NAME}.local" | dd of=/etc/hosts &>/dev/null
+      echo "127.0.0.1 localhost ${VEHICLE_NAME} ${VEHICLE_NAME}.local" >> /etc/hosts
     } || {
       echo "WARNING: Failed writing to /etc/hosts. Will continue anyway."
     }
@@ -144,10 +163,18 @@ configure_ROS(){
     fi
   done
 
-  # configure ROS_HOSTNAME
-  MACHINE_HOSTNAME="$(hostname).local"
-  debug "Setting ROS_HOSTNAME to '${MACHINE_HOSTNAME}'"
-  export ROS_HOSTNAME=${MACHINE_HOSTNAME}
+  # configure ROS_IP / ROS_HOSTNAME
+  if is_nethost; then
+    # configure ROS_HOSTNAME
+    MACHINE_HOSTNAME="$(hostname).local"
+    debug "Detected '--net=host', setting ROS_HOSTNAME to '${MACHINE_HOSTNAME}'"
+    export ROS_HOSTNAME=${MACHINE_HOSTNAME}
+  else
+    # configure ROS_IP
+    CONTAINER_IP=$(hostname -I 2>/dev/null | cut -d " " -f 1)
+    debug "Detected '--net=bridge', setting ROS_IP to '${CONTAINER_IP}'"
+    export ROS_IP=${CONTAINER_IP}
+  fi
 
   # configure ROS MASTER URI
   if [ "${ROS_MASTER_URI_IS_SET}" -eq "0" ]; then
