@@ -1,3 +1,2 @@
-from .constants import RobotType
-
-from .robot import get_robot_type
+from .constants import RobotType, RobotConfiguration
+from .robot import get_robot_type, get_robot_configuration

@@ -1,11 +1,9 @@
 import os
 import socket
 import logging
-from typing import Optional
 
 from .constants import \
     ETH0_DEVICE_MAC_FILE, \
-    CONFIG_DIR, \
     DeviceHardwareBrand
 
 
@@ -46,4 +44,5 @@ def get_device_hardware_brand() -> DeviceHardwareBrand:
         return DeviceHardwareBrand.RASPBERRY_PI
     elif hw == 'jetson_nano':
         return DeviceHardwareBrand.JETSON_NANO
+    # ---
     return DeviceHardwareBrand.UNKNOWN
