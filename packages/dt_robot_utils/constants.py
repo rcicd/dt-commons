@@ -30,7 +30,7 @@ class RobotConfiguration(IntEnum):
     DB18 = 10
     DB19 = 11
     DB20 = 12
-    DB21 = 13
+    DB21M = 13
     # Watchtower
     WT18 = 20
     WT19A = 21
