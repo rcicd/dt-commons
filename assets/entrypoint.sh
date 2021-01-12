@@ -30,7 +30,8 @@ debug(){
 is_nethost(){
   ipval(){
     # returns the integer representation of an IP arg passed in ascii notation (x.y.z.w)
-    IP=$1; IPNUM=0
+    IP=$1
+    IPNUM=0
     for (( i=0 ; i<4 ; ++i )); do
       ((IPNUM+=${IP%%.*}*$((256**$((3-${i}))))))
       IP=${IP#*.}
