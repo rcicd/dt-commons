@@ -60,6 +60,10 @@ RUN cd /tmp/ \
     && cd ~ \
     && rm -rf /tmp/lcm
 
+# configure arch-specific environment
+COPY assets/setup/by-arch/${ARCH} /tmp/.setup-by-arch
+RUN /tmp/.setup-by-arch/setup.sh
+
 # copy the source code
 COPY ./packages "${REPO_PATH}/packages"
 
