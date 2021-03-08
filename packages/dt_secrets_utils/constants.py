@@ -1,1 +1,1 @@
-SECRETS_DIR = "/secrets/"
+SECRETS_DIR = "/secrets"
