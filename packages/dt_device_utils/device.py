@@ -2,6 +2,8 @@ import os
 import socket
 import logging
 
+import requests
+
 from .constants import \
     ETH0_DEVICE_MAC_FILE, \
     DeviceHardwareBrand
@@ -46,3 +48,33 @@ def get_device_hardware_brand() -> DeviceHardwareBrand:
         return DeviceHardwareBrand.JETSON_NANO
     # ---
     return DeviceHardwareBrand.UNKNOWN
+
+
+def _device_trigger(trigger: str, quiet: bool = True) -> bool:
+    hostname = get_device_hostname()
+    url = f"http://{hostname}.local/health/trigger/{trigger}"
+    # ---
+    try:
+        data = requests.get(url).json()
+        assert data['status'] == 'needs-confirmation'
+        assert 'token' in data
+        token = data['token']
+        url += f"?token={token}"
+        data = requests.get(url).json()
+        assert data['status'] == 'ok'
+    except BaseException as e:
+        if quiet:
+            logger.error(str(e))
+            return False
+        else:
+            raise e
+    # ---
+    return True
+
+
+def shutdown_device(quiet: bool = True) -> bool:
+    return _device_trigger('shutdown', quiet=quiet)
+
+
+def reboot_device(quiet: bool = True) -> bool:
+    return _device_trigger('reboot', quiet=quiet)
