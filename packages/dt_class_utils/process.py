@@ -44,7 +44,7 @@ class DTProcess(object):
         return self._is_debug
 
     @staticmethod
-    def get_instance():
+    def get_instance() -> 'DTProcess':
         return DTProcess.__instance__
 
     def start_time(self):
