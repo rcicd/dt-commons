@@ -1,7 +1,7 @@
 from enum import IntEnum
 
-ETH0_DEVICE_MAC_FILE = "/data/stats/MAC/eth0"
 CONFIG_DIR = "/data/config/"
+DEVICE_ID_IFACE = "eth0"
 
 
 class DeviceHardwareBrand(IntEnum):

@@ -1,13 +1,10 @@
 import os
 import socket
 import logging
-
+import netifaces
 import requests
 
-from .constants import \
-    ETH0_DEVICE_MAC_FILE, \
-    DeviceHardwareBrand
-
+from .constants import DeviceHardwareBrand, DEVICE_ID_IFACE
 
 # create logger
 logging.basicConfig()
@@ -18,13 +15,19 @@ if 'DEBUG' in os.environ and os.environ['DEBUG'].lower() in ['true', 'yes', '1']
 
 
 def get_device_id() -> str:
-    if not os.path.isfile(ETH0_DEVICE_MAC_FILE):
-        msg = f"File '{ETH0_DEVICE_MAC_FILE}' not found. Cannot compute unique device ID."
+    try:
+        addresses = netifaces.ifaddresses(DEVICE_ID_IFACE)
+    except ValueError:
+        msg = f"Network interface '{DEVICE_ID_IFACE}' not found. Device ID cannot be computed."
         logger.error(msg)
         raise ValueError(msg)
-    # read MAC from file
-    with open(ETH0_DEVICE_MAC_FILE, 'rt') as fin:
-        mac = fin.read().strip()
+    # read MAC address
+    try:
+        mac = addresses[netifaces.AF_LINK][0]['addr']
+    except KeyError:
+        msg = f"No MAC address found on '{DEVICE_ID_IFACE}'. Cannot compute unique device ID."
+        logger.error(msg)
+        raise ValueError(msg)
     # turn MAC into a unique ID
     device_id = mac.replace(':', '').strip()
     # make sure we have a valid MAC address
