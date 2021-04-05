@@ -5,7 +5,6 @@ CONFIG_DIR=/data/config
 ROBOT_TYPE_FILE=${CONFIG_DIR}/robot_type
 ROBOT_CONFIGURATION_FILE=${CONFIG_DIR}/robot_configuration
 ROBOT_HARDWARE_FILE=${CONFIG_DIR}/robot_hardware
-DOCKER_BRIDGE_IP_RANGE=(172.17.0.0 172.31.255.255)
 
 echo "==> Entrypoint"
 
@@ -28,21 +27,9 @@ debug(){
 
 
 is_nethost(){
-  ipval(){
-    # returns the integer representation of an IP arg passed in ascii notation (x.y.z.w)
-    IP=$1
-    IPNUM=0
-    for (( i=0 ; i<4 ; ++i )); do
-      ((IPNUM+=${IP%%.*}*$((256**$((3-${i}))))))
-      IP=${IP#*.}
-    done
-    echo $IPNUM
-  }
-  GATEWAY=$(route -n | grep 'UG[ \t]' | awk '{print $2}')
-  GATEWAY_INT=$(ipval "${GATEWAY}")
-  BRIDGE_MIN_INT=$(ipval "${DOCKER_BRIDGE_IP_RANGE[0]}")
-  BRIDGE_MAX_INT=$(ipval "${DOCKER_BRIDGE_IP_RANGE[1]}")
-  ! [[ ${GATEWAY_INT} -ge ${BRIDGE_MIN_INT} && ${GATEWAY_INT} -le ${BRIDGE_MAX_INT} ]]
+  netmode=$(dt-get-network-mode)
+  debug "Detected network mode: ${netmode}"
+  [[ "${netmode}" = "HOST" ]]
 }
 
 
