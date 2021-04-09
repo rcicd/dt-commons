@@ -28,7 +28,6 @@ debug(){
 
 is_nethost(){
   netmode=$(dt-get-network-mode)
-  debug "Detected network mode: ${netmode}"
   [[ "${netmode}" = "HOST" ]]
 }
 
@@ -43,32 +42,49 @@ configure_vehicle(){
   fi
   export VEHICLE_NAME="${VEHICLE_NAME}"
 
-  # check optional arguments
-  if [ ${#VEHICLE_IP} -ne 0 ]; then
-    echo "The environment variable VEHICLE_IP is set to '${VEHICLE_IP}'. Adding to /etc/hosts."
-    {
-      echo "${VEHICLE_IP} ${VEHICLE_NAME} ${VEHICLE_NAME}.local" >> /etc/hosts
-    } || {
-      echo "WARNING: Failed writing to /etc/hosts. Will continue anyway."
-    }
-  fi
+  # super user configuration
+  if [ "${UID}" -eq "0" ]; then
+      # we are root
+      netwarnings=0
 
-  # configure hosts
-  if [ "${VEHICLE_NAME_IS_SET}" -eq "0" ]; then
-    # vehicle name not set (assume vehicle is localhost)
-    {
-      echo "127.0.0.1 localhost ${VEHICLE_NAME} ${VEHICLE_NAME}.local" >> /etc/hosts
-    } || {
-      echo "WARNING: Failed writing to /etc/hosts. Will continue anyway."
-    }
-  fi
+      # check optional arguments
+      if [ ${#VEHICLE_IP} -ne 0 ]; then
+        echo "The environment variable VEHICLE_IP is set to '${VEHICLE_IP}'. Adding to /etc/hosts."
+        {
+          echo "${VEHICLE_IP} ${VEHICLE_NAME} ${VEHICLE_NAME}.local" >> /etc/hosts
+        } || {
+          echo "WARNING: Failed writing to /etc/hosts. Will continue anyway.";
+          netwarnings=1
+        }
+      fi
 
-  # configure (fake) mDNS
-  {
-    echo "127.0.0.1 localhost $(hostname) $(hostname).local" >> /etc/hosts
-  } || {
-    echo "WARNING: Failed writing to /etc/hosts. Will continue anyway."
-  }
+      # configure hosts
+      if [ "${VEHICLE_NAME_IS_SET}" -eq "0" ]; then
+        # vehicle name not set (assume vehicle is localhost)
+        {
+          echo "127.0.0.1 localhost ${VEHICLE_NAME} ${VEHICLE_NAME}.local" >> /etc/hosts
+        } || {
+          echo "WARNING: Failed writing to /etc/hosts. Will continue anyway.";
+          netwarnings=1
+        }
+      fi
+
+      # configure (fake) mDNS
+      {
+        echo "127.0.0.1 localhost $(hostname) $(hostname).local" >> /etc/hosts
+      } || {
+        echo "WARNING: Failed writing to /etc/hosts. Will continue anyway.";
+        netwarnings=1
+      }
+
+      if [ "${netwarnings}" -eq "1" ]; then
+          echo "Network configured (with warnings)."
+      else
+          echo "Network configured successfully."
+      fi
+  else
+      echo "WARNING: Running in unprivileged mode, container's network will not be configured."
+  fi
 
   # robot_type
   if [ ${#ROBOT_TYPE} -le 0 ]; then
@@ -135,6 +151,21 @@ configure_ROS(){
   ROS_MASTER_URI_IS_SET=0
   if [ -n "${ROS_MASTER_URI}" ]; then
     ROS_MASTER_URI_IS_SET=1
+    echo "Forcing ROS_MASTER_URI=${ROS_MASTER_URI}"
+  fi
+
+  # check if ROS_HOSTNAME is set
+  ROS_HOSTNAME_IS_SET=0
+  if [ -n "${ROS_HOSTNAME}" ]; then
+    ROS_HOSTNAME_IS_SET=1
+    echo "Forcing ROS_HOSTNAME=${ROS_HOSTNAME}"
+  fi
+
+  # check if ROS_IP is set
+  ROS_IP_IS_SET=0
+  if [ -n "${ROS_IP}" ]; then
+    ROS_IP_IS_SET=1
+    echo "Forcing ROS_IP=${ROS_IP}"
   fi
 
   # constants
@@ -151,17 +182,24 @@ configure_ROS(){
     fi
   done
 
-  # configure ROS_IP / ROS_HOSTNAME
-  if is_nethost; then
-    # configure ROS_HOSTNAME
-    MACHINE_HOSTNAME="$(hostname).local"
-    debug "Detected '--net=host', setting ROS_HOSTNAME to '${MACHINE_HOSTNAME}'"
-    export ROS_HOSTNAME=${MACHINE_HOSTNAME}
-  else
-    # configure ROS_IP
-    CONTAINER_IP=$(hostname -I 2>/dev/null | cut -d " " -f 1)
-    debug "Detected '--net=bridge', setting ROS_IP to '${CONTAINER_IP}'"
-    export ROS_IP=${CONTAINER_IP}
+  # configure ROS_HOSTNAME
+  if [ "${ROS_HOSTNAME_IS_SET}" -eq "0" ]; then
+    if is_nethost; then
+      # configure ROS_HOSTNAME
+      MACHINE_HOSTNAME="$(hostname).local"
+      debug "Detected '--net=host', setting ROS_HOSTNAME to '${MACHINE_HOSTNAME}'"
+      export ROS_HOSTNAME=${MACHINE_HOSTNAME}
+    fi
+  fi
+
+  # configure ROS_IP
+  if [ "${ROS_IP_IS_SET}" -eq "0" ]; then
+    if ! is_nethost; then
+      # configure ROS_IP
+      CONTAINER_IP=$(hostname -I 2>/dev/null | cut -d " " -f 1)
+      debug "Detected '--net=bridge', setting ROS_IP to '${CONTAINER_IP}'"
+      export ROS_IP=${CONTAINER_IP}
+    fi
   fi
 
   # configure ROS MASTER URI
@@ -174,15 +212,15 @@ configure_ROS(){
 # configure
 debug "=> Setting up vehicle configuration..."
 configure_vehicle
-debug "<= Done!\n"
+debug "<= Done!"
 
 debug "=> Setting up PYTHONPATH..."
 configure_python
-debug "<= Done!\n"
+debug "<= Done!"
 
 debug "=> Setting up ROS environment..."
 configure_ROS
-debug "<= Done!\n"
+debug "<= Done!"
 
 # mark this file as sourced
 DT_ENTRYPOINT_SOURCED=1
