@@ -1,6 +1,11 @@
 import os
+from typing import Optional
 
 from .constants import RobotType, RobotConfiguration
+
+
+def get_robot_name() -> Optional[str]:
+    return os.environ.get('VEHICLE_NAME', None)
 
 
 def get_robot_type() -> RobotType:
