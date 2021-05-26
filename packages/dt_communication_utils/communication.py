@@ -350,14 +350,16 @@ class DTRawCommunicationGroup(object):
         """
         Shuts down the group.
         """
+        # mark it as shutdown
+        self._is_shutdown = True
+        # wait for the mailman to return
+        self._mailman.join()
         # shutdown all publishers
         for pub in copy.copy(self._publishers):
             pub.shutdown()
         # shutdown all subscribers
         for sub in copy.copy(self._subscribers):
             sub.shutdown()
-        # ---
-        self._is_shutdown = True
 
     def _get_url(self, port: int) -> str:
         """
@@ -639,14 +641,34 @@ class _DTRawCommunicationSubGroup(object):
         """
         Shuts down the subgroup.
         """
+        # mark it as shutdown
+        self._is_shutdown = True
+        # TODO: this has the potential of SegFault-ing the process. It goes like this:
+        #       .
+        #       There is an LCM handler that is used by two threads in Python.
+        #       One is called the "mailman", which is basically taking care of processing the
+        #       messages coming in and then the main application thread, which consumes messages
+        #       that the mailman puts in a queue.
+        #       .
+        #       The app thread is the one deciding when the whole process should terminate.
+        #       So, the app thread initializes a `shutdown()` sequence and starts detaching
+        #       publishers/subscribers from the handler, with the idea being that once the
+        #       mailman returns, it never goes out again to deliver messages.
+        #       .
+        #       On the C side of the handler, though, when the mailman returns with a message,
+        #       it tries to look up the corresponding subscriber and its callbacks,
+        #       but those were already destroyed by the app thread, hence the SegFault.
+        #       .
+        #       While this can be solved in a `CommunicationGroup` by waiting for the mailman to
+        #       return, it is not as easy in a `SubGroup`, where the mailman is shared across
+        #       subgroups.
+        #
         # shutdown all publishers
         for pub in copy.copy(self._publishers):
             pub.shutdown()
         # shutdown all subscribers
         for sub in copy.copy(self._subscribers):
             sub.shutdown()
-        # ---
-        self._is_shutdown = True
 
 
 class DTCommunicationPublisher(object):
