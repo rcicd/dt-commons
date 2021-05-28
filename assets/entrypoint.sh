@@ -15,7 +15,7 @@ set -e
 echo ND > /health
 
 # get container ID
-DT_MODULE_INSTANCE=$(basename "$(cat /proc/1/cpuset)")
+DT_MODULE_INSTANCE=$(dt-get-container-id)
 export DT_MODULE_INSTANCE
 
 
