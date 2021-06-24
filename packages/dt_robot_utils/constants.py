@@ -31,19 +31,29 @@ class RobotConfiguration(IntEnum):
     DB19 = 11
     DB20 = 12
     DB21M = 13
+    DB21A = 14
+    DB21B = 15
     # Watchtower
     WT18 = 20
     WT19A = 21
     WT19B = 22
+    WT21A = 23
+    WT21B = 24
     # Traffic Light
     TL18 = 30
     TL19 = 31
+    TL21 = 32
     # Green Station
     GS17 = 40
     # Duckietown
     DT20 = 50
+    DT21 = 51
     # Duckiedrone
     DD18 = 60
+    # Workstation
+    WS21A = 70
+    WS21B = 71
+    WS21C = 72
 
     @classmethod
     def from_string(cls, name) -> 'RobotConfiguration':
