@@ -1,46 +1,52 @@
 version: 2.1
 jobs:
-  build:
-    docker:
-      - image: ubuntu:18.04
+    build:
+        docker:
+            -   image: ubuntu:18.04
 
-    steps:
-      - setup_remote_docker
+        steps:
+            - setup_remote_docker
 
-      - run:
-          name: Install dependencies
-          command: |
-            apt update && \
-            apt install -y python3-pip git git-lfs curl && \
-            rm -rf /var/lib/apt/lists/*
+            -   run:
+                    name: Install dependencies
+                    command: |
+                        apt update && \
+                        apt install -y python3-pip git git-lfs curl && \
+                        rm -rf /var/lib/apt/lists/*
 
-      - run:
-          name: Install Docker
-          command: |
-            curl -fsSL https://get.docker.com -o get-docker.sh
-            sh get-docker.sh
-            rm get-docker.sh
+            -   run:
+                    name: Install Docker
+                    command: |
+                        curl -fsSL https://get.docker.com -o get-docker.sh
+                        sh get-docker.sh
+                        rm get-docker.sh
 
-      - run:
-          name: Install dts
-          command: |
-            python3 -m pip install --no-cache-dir --user -U duckietown-shell
-            export PATH="$PATH:$HOME/.local/bin"
-            dts --set-version daffy exit
+            -   run:
+                    name: Install dts
+                    command: |
+                        python3 -m pip install --no-cache-dir --user -U duckietown-shell
+                        export PATH="$PATH:$HOME/.local/bin"
+                        dts --set-version daffy exit
 
-      - checkout
+            - checkout
 
-      - run:
-          name: Build the docs
-          command: |
-            export PATH="$PATH:$HOME/.local/bin"
-            dts devel build --docs
+            -   run:
+                    name: Pull the image
+                    command: |
+                        export PATH="$PATH:$HOME/.local/bin"
+                        dts devel pull
 
-      - store_artifacts:
-          path: html
-          destination: html
+            -   run:
+                    name: Build the docs
+                    command: |
+                        export PATH="$PATH:$HOME/.local/bin"
+                        dts devel build --docs
 
-      - store_artifacts:
-          path: html/package.tgz
-          destination: out/package.tgz
+            -   store_artifacts:
+                    path: html
+                    destination: html
+
+            -   store_artifacts:
+                    path: html/package.tgz
+                    destination: out/package.tgz
 
