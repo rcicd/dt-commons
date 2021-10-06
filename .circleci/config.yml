@@ -37,10 +37,10 @@ jobs:
             dts devel build --docs
 
       - store_artifacts:
-          path: html/out
+          path: html
           destination: html
 
       - store_artifacts:
-          path: html/out/package.tgz
+          path: html/package.tgz
           destination: out/package.tgz
 
