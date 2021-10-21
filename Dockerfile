@@ -52,7 +52,8 @@ ENV PIP_INDEX_URL=${PIP_INDEX_URL}
 RUN echo PIP_INDEX_URL=${PIP_INDEX_URL}
 
 COPY ./dependencies-py3.txt "${REPO_PATH}/"
-RUN python3 -m pip install  -r ${REPO_PATH}/dependencies-py3.txt
+RUN python3 -m pip install -U pip
+RUN python3 -m pip install -U -r ${REPO_PATH}/dependencies-py3.txt
 
 # install LCM
 RUN cd /tmp/ \

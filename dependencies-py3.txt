@@ -1,8 +1,5 @@
 # LIST YOUR PYTHON3 PACKAGES HERE
 
-# update pip
-pip
-
 # these are for service registration and discovery
 zeroconf
 netifaces
