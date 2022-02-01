@@ -1,9 +1,11 @@
 #!/bin/bash
 
-set -e
 export DEBUG=1
 export ROS_HOME=/tmp
 export ROSCONSOLE_STDOUT_LINE_BUFFERED=1
+
+# if anything weird happens from now on, STOP
+set -e
 
 # source entrypoint if it hasn't been done
 if [ "${DT_ENTRYPOINT_SOURCED-unset}" != "1" ]; then
@@ -33,12 +35,15 @@ dt-join() {
 }
 
 dt-launchfile-init() {
+    # if anything weird happens from now on, STOP
     set -e
     # register signal handlers
     dt-register-signals
     if [ "${1-undefined}" != "--quiet" ]; then
         echo "==> Launching app..."
     fi
+    # if anything weird happens from now on, CONTINUE
+    set +e
 }
 
 dt-launchfile-join() {
@@ -57,7 +62,6 @@ dt-exec() {
     eval "${cmd}"
 }
 
-
 dt-exec-BG() {
     cmd="$@"
     eval "stdbuf -o L ${cmd%&} 1>&2 &"
@@ -69,7 +73,8 @@ dt-exec-FG() {
 }
 
 copy-ros-logs() {
-
-  find /tmp/log  -type f  -name "*.log" -exec cp {} /challenges/challenge-solution-output \;
-
+    find /tmp/log  -type f  -name "*.log" -exec cp {} /challenges/challenge-solution-output \;
 }
+
+# if anything weird happens from now on, CONTINUE
+set +e
