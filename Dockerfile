@@ -1,6 +1,6 @@
 # parameters
 ARG REPO_NAME="dt-commons"
-ARG MAINTAINER="Andrea F. Daniele (afdaniele@ttic.edu)"
+ARG MAINTAINER="Andrea F. Daniele (afdaniele@duckietown.com)"
 ARG DESCRIPTION="Base image containing common libraries and environment setup for non-ROS applications."
 ARG ICON="square"
 
