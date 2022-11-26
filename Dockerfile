@@ -45,6 +45,13 @@ ENV DT_MODULE_TYPE="${REPO_NAME}" \
     DT_LAUNCH_PATH="${LAUNCH_PATH}" \
     DT_LAUNCHER="${LAUNCHER}"
 
+# duckie user
+ENV DT_USER_NAME="duckie" \
+    DT_USER_UID=2222 \
+    DT_GROUP_NAME="duckie" \
+    DT_GROUP_GID=2222 \
+    DT_USER_HOME="/home/duckie"
+
 # install apt dependencies
 COPY ./dependencies-apt.txt "${REPO_PATH}/"
 RUN dt-apt-install "${REPO_PATH}/dependencies-apt.txt"
@@ -72,16 +79,16 @@ COPY assets/setup/${TARGETPLATFORM}/setup.sh /tmp/setup-by-arch.sh
 RUN /tmp/setup-by-arch.sh
 
 # create `duckie` user
-RUN addgroup --gid 1000 "duckie" && \
+RUN addgroup --gid ${DT_GROUP_GID} "${DT_GROUP_NAME}" && \
     useradd \
         --create-home \
-        --home-dir "/home/duckie" \
+        --home-dir "${DT_USER_HOME}" \
         --comment "Duckietown User" \
         --shell "/bin/bash" \
         --password "aa26uhROPk6sA" \
-        --uid 1000 \
-        --gid 1000 \
-        "duckie"
+        --uid ${DT_USER_UID} \
+        --gid ${DT_GROUP_GID} \
+        "${DT_USER_NAME}"
 
 # copy the source code
 COPY ./packages "${REPO_PATH}/packages"
