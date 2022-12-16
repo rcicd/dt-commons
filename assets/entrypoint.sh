@@ -245,11 +245,13 @@ configure_user() {
     if [ "${IMPERSONATE_UID:-}" != "" ]; then
         echo "Impersonating user with UID: ${IMPERSONATE_UID}"
         usermod -u ${IMPERSONATE_UID} ${DT_USER_NAME}
+        export DT_USER_UID=${IMPERSONATE_UID}
     fi
     # impersonate GID
     if [ "${IMPERSONATE_GID:-}" != "" ]; then
         echo "Impersonating group with GID: ${IMPERSONATE_GID}"
         groupmod -g ${IMPERSONATE_GID} ${DT_USER_NAME}
+        export DT_GROUP_GID=${IMPERSONATE_GID}
     fi
 }
 
