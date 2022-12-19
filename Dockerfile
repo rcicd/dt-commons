@@ -128,3 +128,8 @@ LABEL org.duckietown.label.module.type="${REPO_NAME}" \
     org.duckietown.label.base.image="${BASE_IMAGE}" \
     org.duckietown.label.base.tag="${BASE_TAG}" \
     org.duckietown.label.maintainer="${MAINTAINER}"
+
+# relax healthcheck to include ND as healthy state
+HEALTHCHECK \
+    --interval=5s \
+    CMD cat /health && grep -q '^healthy\|ND$' /health
