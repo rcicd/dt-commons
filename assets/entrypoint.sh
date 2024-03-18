@@ -181,7 +181,7 @@ configure_ROS() {
     # constants
     ROS_SETUP=(
         "/opt/ros/${ROS_DISTRO}/setup.bash"
-        "${SOURCE_DIR}/catkin_ws/devel/setup.bash"
+        "${SOURCE_DIR}/install/setup.bash"
         "${SOURCE_DIR}/setup.bash"
     )
 
